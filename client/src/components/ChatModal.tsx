@@ -1,166 +1,174 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import type { Character, ChatMessage } from "@shared/schema";
 
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  character: Character;
   userId: string;
+  characterId: string;
+  characterName: string;
 }
 
-export default function ChatModal({ isOpen, onClose, character, userId }: ChatModalProps) {
+interface ChatMessage {
+  id: string;
+  userId: string;
+  characterId: string;
+  userMessage: string;
+  characterResponse: string;
+  timestamp: Date;
+}
+
+export default function ChatModal({ isOpen, onClose, userId, characterId, characterName }: ChatModalProps) {
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  // Fetch chat messages
-  const { data: messages = [] } = useQuery<ChatMessage[]>({
-    queryKey: ["/api/chat", userId],
+  const { data: messages = [], isLoading } = useQuery({
+    queryKey: ["/api/chat", userId, characterId],
     enabled: isOpen,
   });
 
-  // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (messageText: string) => {
-      const response = await apiRequest("POST", "/api/chat", {
+    mutationFn: async (userMessage: string) => {
+      const response = await apiRequest("POST", "/api/chat/send", {
         userId,
-        characterId: character.id,
-        message: messageText,
-        isFromUser: true
+        characterId,
+        message: userMessage,
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat", userId, characterId] });
       setMessage("");
-      
-      // Simulate AI response after a delay
-      setTimeout(() => {
-        const aiResponses = [
-          "That's really interesting! Tell me more.",
-          "I understand how you feel about that.",
-          "Thanks for sharing that with me! ✨",
-          "You always know what to say to make me smile!",
-          "I love talking with you about these things.",
-          "That sounds wonderful! I wish I could experience that too.",
-          "You have such a unique perspective on things.",
-          "I'm here whenever you want to chat! 💕"
-        ];
-        
-        const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-        
-        apiRequest("POST", "/api/chat", {
-          userId,
-          characterId: character.id,
-          message: randomResponse,
-          isFromUser: false
-        }).then(() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/chat", userId] });
-        });
-      }, 1000 + Math.random() * 2000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Message Failed",
+        description: error.message || "Failed to send message",
+        variant: "destructive",
+      });
     },
   });
 
-  const handleSend = () => {
-    if (message.trim() && !sendMessageMutation.isPending) {
-      sendMessageMutation.mutate(message.trim());
-    }
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+    sendMessageMutation.mutate(message);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSendMessage();
     }
   };
 
-  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const characterMessages = messages.filter(msg => msg.characterId === character.id);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-purple-900 to-pink-900 text-white border border-purple-500/30 max-w-md h-3/4 flex flex-col p-0">
+      <DialogContent className="bg-gradient-to-br from-purple-600 to-blue-600 text-white border-none max-w-sm p-6 rounded-3xl h-[600px] flex flex-col">
         
-        {/* Chat Header */}
-        <DialogHeader className="p-4 border-b border-purple-500/30 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage 
-                src={character.imageUrl} 
-                alt={character.name}
-                className="object-cover"
-              />
-            </Avatar>
-            <div>
-              <DialogTitle className="font-bold text-white">{character.name}</DialogTitle>
-              <p className="text-xs text-green-400">Online</p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm">💬</span>
             </div>
+            <h2 className="text-xl font-bold text-pink-300">Chat</h2>
           </div>
-        </DialogHeader>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            className="text-white hover:bg-white/20 p-1 h-8 w-8 rounded-full"
+          >
+            ✕
+          </Button>
+        </div>
 
-        {/* Chat Messages */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {characterMessages.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
-                <p>Start a conversation with {character.name}!</p>
-                <p className="text-sm">Say hello to get started.</p>
-              </div>
-            ) : (
-              characterMessages.map((msg) => (
-                <div key={msg.id} className={`flex space-x-2 ${msg.isFromUser ? 'justify-end' : ''}`}>
-                  {!msg.isFromUser && (
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarImage 
-                        src={character.imageUrl} 
-                        alt={character.name}
-                        className="object-cover"
-                      />
-                    </Avatar>
-                  )}
-                  <div className={`rounded-2xl p-3 max-w-xs ${
-                    msg.isFromUser 
-                      ? 'bg-blue-600/50 rounded-tr-md' 
-                      : 'bg-purple-700/50 rounded-tl-md'
-                  }`}>
-                    <p className="text-sm">{msg.message}</p>
+        {/* Messages Container */}
+        <div className="flex-1 bg-white/10 rounded-2xl p-4 mb-4 overflow-y-auto backdrop-blur-sm">
+          {isLoading ? (
+            <div className="text-center text-white/70">Loading messages...</div>
+          ) : messages.length === 0 ? (
+            <div className="text-center text-white/70">Start a conversation with {characterName}!</div>
+          ) : (
+            <div className="space-y-3">
+              {messages.map((msg: ChatMessage) => (
+                <div key={msg.id} className="space-y-2">
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] text-sm">
+                      {msg.userMessage}
+                      {msg.userMessage.includes("😊") && <span className="ml-1">😊</span>}
+                    </div>
+                  </div>
+                  
+                  {/* Character response */}
+                  <div className="flex justify-start">
+                    <div className="bg-pink-500 text-white px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] text-sm">
+                      {msg.characterResponse}
+                    </div>
                   </div>
                 </div>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+              ))}
+              
+              {/* Sample messages if none exist */}
+              {messages.length === 0 && (
+                <div className="space-y-3">
+                  <div className="flex justify-end">
+                    <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] text-sm">
+                      That's interesting! Tell me more 😊
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="bg-pink-500 text-white px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] text-sm">
+                      Ddd
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] text-sm">
+                      That's interesting! Tell me more 😊
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="bg-pink-500 text-white px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] text-sm">
+                      Hey
+                    </div>
+                  </div>
+                  <div className="text-blue-300 text-sm">
+                    Created new character: Brooke
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
 
-        {/* Chat Input */}
-        <div className="p-4 border-t border-purple-500/30 flex-shrink-0">
-          <div className="flex space-x-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              className="flex-1 bg-black/30 rounded-lg text-white placeholder-gray-400 border border-purple-500/30 focus:border-purple-400"
-              disabled={sendMessageMutation.isPending}
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!message.trim() || sendMessageMutation.isPending}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
-            >
-              <i className="fas fa-paper-plane"></i>
-            </Button>
-          </div>
+        {/* Input Area */}
+        <div className="flex space-x-2">
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            className="flex-1 bg-white/10 border-none text-white placeholder-white/60 rounded-2xl px-4"
+            disabled={sendMessageMutation.isPending}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={!message.trim() || sendMessageMutation.isPending}
+            className="bg-pink-500 hover:bg-pink-600 text-white px-6 rounded-2xl"
+          >
+            Send
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
