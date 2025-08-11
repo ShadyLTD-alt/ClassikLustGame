@@ -336,6 +336,7 @@ export default function CharacterCreation({ isOpen, onClose }: CharacterCreation
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="none">No specific character</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id} value={file.path}>
                                   {file.originalName}
@@ -361,6 +362,7 @@ export default function CharacterCreation({ isOpen, onClose }: CharacterCreation
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="none">Any Character</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id} value={file.path}>
                                   {file.originalName}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -135,7 +134,7 @@ export default function Game() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/user", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
-      
+
       toast({
         title: "Tap Success!",
         description: `Earned ${data.pointsEarned} points!`,
@@ -242,7 +241,7 @@ export default function Game() {
               <span className="text-white text-sm">Energy</span>
               <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "5500"}</span>
             </div>
-            
+
             {/* Admin Button - Only visible to admin users */}
             {isCurrentUserAdmin(user) && (
               <Button
@@ -283,7 +282,7 @@ export default function Game() {
             <Target className="w-6 h-6" />
             <span className="text-xs mt-1">Wheel</span>
           </Button>
-          
+
           <Button
             onClick={() => setShowUpgradeModal(true)}
             className="w-16 h-20 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg flex flex-col items-center justify-center"
@@ -294,23 +293,8 @@ export default function Game() {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0">
-          {/* Level Up Button */}
-          <div className="px-4 pb-2">
-            <Button
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-4"
-              onClick={() => toast({ title: "Level Up", description: "Level up functionality coming soon!" })}
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="font-bold">Level Up</span>
-                <span className="font-bold">{stats?.totalPoints ? Math.floor(stats.totalPoints * 0.1) : "4560"}</span>
-              </div>
-            </Button>
-          </div>
-
-          {/* Bottom Navigation Bar */}
-          <div className="bg-black/40 backdrop-blur-md p-3">
-            <div className="flex justify-around items-center">
+          <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-sm border-t border-white/10 p-4 pb-6">
+            <div className="flex justify-around items-center max-w-md mx-auto">
               <Button
                 onClick={() => setShowUpgradeModal(true)}
                 className="flex flex-col items-center space-y-1 bg-transparent hover:bg-white/10 text-white p-3 rounded-lg"
@@ -344,7 +328,6 @@ export default function Game() {
               </Button>
             </div>
           </div>
-        </div>
       </div>
 
       {/* Settings Modal */}
@@ -527,7 +510,7 @@ export default function Game() {
         upgrades={upgrades || []}
         user={user}
       />
-      
+
       <ChatModal
         isOpen={showChatModal}
         onClose={() => setShowChatModal(false)}

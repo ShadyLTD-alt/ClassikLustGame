@@ -135,7 +135,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                   <SelectValue placeholder="Select character (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific character</SelectItem>
+                  <SelectItem value="none">No specific character</SelectItem>
                   {characters.map((char: any) => (
                     <SelectItem key={char.id} value={char.id}>
                       {char.name}

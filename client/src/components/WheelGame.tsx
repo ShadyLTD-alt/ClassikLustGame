@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface WheelReward {
+  id?: number; // Added id for saving settings
   type: string;
   min?: number;
   max?: number;
@@ -36,7 +37,7 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
   const [wheelRotation, setWheelRotation] = useState(0);
   const [timeUntilNext, setTimeUntilNext] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -53,19 +54,45 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
   });
 
   // Fetch game settings for wheel rewards
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading: isLoadingSettings } = useQuery({
     queryKey: ['/api/settings'],
     queryFn: () => fetch('/api/settings').then(res => res.json())
   });
 
-  const wheelRewards: WheelReward[] = settings?.wheelRewards || [
+  // Initialize wheelRewards from settings or use default
+  const [wheelRewards, setWheelRewards] = useState<WheelReward[]>(settings?.wheelRewards || [
     { type: 'coins', min: 100, max: 500, probability: 0.3, icon: '🪙', color: 'bg-yellow-500' },
     { type: 'energy', min: 10, max: 30, probability: 0.25, icon: '⚡', color: 'bg-blue-500' },
     { type: 'coins', min: 50, max: 200, probability: 0.2, icon: '💰', color: 'bg-green-500' },
     { type: 'energy', min: 5, max: 15, probability: 0.15, icon: '🔋', color: 'bg-cyan-500' },
     { type: 'character', min: 0, max: 0, probability: 0.05, icon: '👸', color: 'bg-purple-500' },
     { type: 'coins', min: 25, max: 100, probability: 0.05, icon: '🎁', color: 'bg-pink-500' }
-  ];
+  ]);
+
+  // Update local state when settings are fetched
+  useEffect(() => {
+    if (settings?.wheelRewards) {
+      setWheelRewards(settings.wheelRewards.map((reward: any, index: number) => ({
+        id: reward.id || index, // Ensure rewards have an ID for saving
+        ...reward
+      })));
+    }
+  }, [settings]);
+
+  // Mutation to save wheel settings
+  const saveSettingsMutation = useMutation({
+    mutationFn: (updatedRewards: WheelReward[]) => apiRequest('/api/settings', {
+      method: 'PATCH',
+      body: { wheelRewards: updatedRewards }
+    }),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Wheel settings saved successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to save settings", variant: "destructive" });
+    }
+  });
 
   // Spin wheel mutation
   const spinMutation = useMutation({
@@ -74,10 +101,12 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
       setSpinResult(result);
       queryClient.invalidateQueries({ queryKey: ['/api/user', userId] });
       queryClient.invalidateQueries({ queryKey: ['/api/wheel/last-spin', userId] });
-      
+
+      // Display a floating notification for the reward
       toast({
-        title: "Wheel Spin Result!",
+        title: "Reward Gained!",
         description: result.message,
+        duration: 3000, // Short duration for floating notification
       });
     },
     onError: (error: any) => {
@@ -86,7 +115,7 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
         description: error.message || "Could not spin the wheel",
         variant: "destructive"
       });
-      setIsSpinning(false);
+      setIsSpinning(false); // Ensure spinning state is reset on error
     }
   });
 
@@ -98,15 +127,15 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
     const now = Date.now();
     const timeDiff = now - lastSpinTime;
     const hoursLeft = 24 - (timeDiff / (1000 * 60 * 60));
-    
+
     if (hoursLeft > 0) {
       setTimeUntilNext(hoursLeft);
-      
+
       const interval = setInterval(() => {
         const currentTime = Date.now();
         const newTimeDiff = currentTime - lastSpinTime;
         const newHoursLeft = 24 - (newTimeDiff / (1000 * 60 * 60));
-        
+
         if (newHoursLeft <= 0) {
           setTimeUntilNext(0);
           clearInterval(interval);
@@ -124,7 +153,7 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
   const canSpin = timeUntilNext <= 0;
 
   const handleSpin = async () => {
-    if (!canSpin || isSpinning) return;
+    if (!canSpin || isSpinning || spinMutation.isPending) return;
 
     setIsSpinning(true);
     setSpinResult(null);
@@ -132,37 +161,66 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
     // Animate wheel
     const spins = 5; // Number of full rotations
     const randomAngle = Math.random() * 360;
-    const totalRotation = wheelRotation + (spins * 360) + randomAngle;
-    
+    const segmentCount = wheelRewards.length;
+    const segmentAngle = 360 / segmentCount;
+
+    // Determine a target segment index (this would ideally be based on the API response)
+    // For now, we'll just pick a random segment to land on for animation purposes
+    const targetSegmentIndex = Math.floor(Math.random() * segmentCount);
+    const targetAngle = targetSegmentIndex * segmentAngle;
+
+    // Calculate the final rotation to land on the center of the target segment
+    // We add a bit of randomness within the segment to make it less predictable
+    const finalSegmentRotation = targetAngle + (Math.random() * segmentAngle) - (segmentAngle / 2);
+
+    const totalRotation = wheelRotation + (spins * 360) + finalSegmentRotation;
+
     setWheelRotation(totalRotation);
 
     // Wait for animation to complete, then trigger API call
+    // The duration of the transition is 3s, so we wait a bit longer
     setTimeout(() => {
       spinMutation.mutate();
-      setIsSpinning(false);
-    }, 3000);
+      setIsSpinning(false); // Reset spinning state after the mutation is called
+    }, 3200); // Slightly longer than the CSS transition for safety
   };
 
   const formatTimeRemaining = (hours: number) => {
     if (hours <= 0) return "Ready to spin!";
-    
+
     const h = Math.floor(hours);
     const m = Math.floor((hours - h) * 60);
-    
+
     if (h > 0) {
       return `${h}h ${m}m remaining`;
-    } else {
+    } else if (m > 0) {
       return `${m}m remaining`;
+    } else {
+      return "Less than a minute remaining";
     }
   };
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'coins': return <Coins className="h-4 w-4" />;
-      case 'energy': return <Zap className="h-4 w-4" />;
-      case 'character': return <Crown className="h-4 w-4" />;
-      default: return <Gift className="h-4 w-4" />;
+      case 'coins': return <Coins className="h-4 w-4 text-yellow-500" />;
+      case 'energy': return <Zap className="h-4 w-4 text-blue-500" />;
+      case 'character': return <Crown className="h-4 w-4 text-purple-500" />;
+      default: return <Gift className="h-4 w-4 text-pink-500" />;
     }
+  };
+
+  // Handler to update wheel rewards locally
+  const handleRewardChange = (index: number, field: keyof WheelReward, value: any) => {
+    const newRewards = [...wheelRewards];
+    // Ensure min/max are numbers, probability is a number between 0 and 1
+    if (field === 'min' || field === 'max') {
+      newRewards[index][field] = value === '' ? undefined : parseInt(value, 10) || 0;
+    } else if (field === 'probability') {
+      newRewards[index][field] = parseFloat(value) || 0;
+    } else {
+      newRewards[index][field] = value;
+    }
+    setWheelRewards(newRewards);
   };
 
   return (
@@ -208,19 +266,28 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
                   {wheelRewards.map((reward, index) => {
                     const angle = (360 / wheelRewards.length) * index;
                     const nextAngle = (360 / wheelRewards.length) * (index + 1);
-                    
+
+                    // Calculate clip path for the segment
+                    const startAngleRad = angle * (Math.PI / 180);
+                    const endAngleRad = nextAngle * (Math.PI / 180);
+                    const startX = 0.5 + 0.5 * Math.cos(startAngleRad);
+                    const startY = 0.5 + 0.5 * Math.sin(startAngleRad);
+                    const endX = 0.5 + 0.5 * Math.cos(endAngleRad);
+                    const endY = 0.5 + 0.5 * Math.sin(endAngleRad);
+
                     return (
                       <div
-                        key={index}
-                        className={`absolute w-1/2 h-1/2 origin-bottom-right ${reward.color}`}
+                        key={reward.id || index} // Use reward.id if available
+                        className={`absolute w-full h-full origin-center ${reward.color?.startsWith('bg-') ? reward.color : ''}`}
                         style={{
-                          transform: `rotate(${angle}deg)`,
-                          clipPath: `polygon(0% 100%, 0% 0%, ${100 * Math.sin((Math.PI * (nextAngle - angle)) / 180)}% ${100 * (1 - Math.cos((Math.PI * (nextAngle - angle)) / 180))}%)`
+                          transform: `rotate(${angle}deg) skewX(${90 - (nextAngle - angle)}deg)`,
+                          background: reward.color?.startsWith('bg-') ? '' : reward.color, // Use background directly if not a Tailwind class
+                          clipPath: `polygon(50% 50%, ${startX * 100}% ${startY * 100}%, ${endX * 100}% ${endY * 100}%)`
                         }}
                       >
-                        <div 
+                        <div
                           className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg"
-                          style={{ transform: `rotate(${(nextAngle - angle) / 2}deg)` }}
+                          style={{ transform: `rotate(${(nextAngle - angle) / 2}deg) skewX(${ (nextAngle - angle) - 90}deg)` }}
                         >
                           <span className="text-2xl">{reward.icon}</span>
                         </div>
@@ -247,8 +314,8 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
                       <Timer className="h-4 w-4" />
                       <span>{formatTimeRemaining(timeUntilNext)}</span>
                     </div>
-                    <Progress 
-                      value={Math.max(0, Math.min(100, ((24 - timeUntilNext) / 24) * 100))} 
+                    <Progress
+                      value={Math.max(0, Math.min(100, ((24 - timeUntilNext) / 24) * 100))}
                       className="mt-2 w-64"
                     />
                   </div>
@@ -321,24 +388,39 @@ export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: 
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {wheelRewards.map((reward, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{reward.icon}</span>
-                    <span className="capitalize">{reward.type}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">
-                      {reward.type !== 'character' ? `${reward.min}-${reward.max}` : 'Rare'}
+              {isLoadingSettings ? (
+                <p>Loading rewards...</p>
+              ) : (
+                wheelRewards.map((reward, index) => (
+                  <div key={reward.id || index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{reward.icon}</span>
+                      <span className="capitalize">{reward.type}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {(reward.probability * 100).toFixed(1)}% chance
+                    <div className="text-right">
+                      <div className="text-sm font-medium">
+                        {reward.type !== 'character' ? `${reward.min !== undefined ? reward.min : 'N/A'}-${reward.max !== undefined ? reward.max : 'N/A'}` : 'Rare'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(reward.probability * 100).toFixed(1)}% chance
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
+            {/* Save Settings Button */}
+            <CardFooter className="flex justify-end">
+              <Button
+                onClick={() => saveSettingsMutation.mutate(wheelRewards)}
+                disabled={saveSettingsMutation.isPending || isLoadingSettings}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+              </Button>
+            </CardFooter>
           </Card>
+
 
           {/* Rules */}
           <Card>
