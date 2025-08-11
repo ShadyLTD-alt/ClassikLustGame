@@ -9,6 +9,8 @@ import ChatModal from "@/components/ChatModal";
 import AdminPanel from "@/components/AdminPanel";
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
+import VIPModal from "@/components/VIPModal";
+import SettingsModal from "@/components/SettingsModal";
 import { Button } from "@/components/ui/button";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
@@ -20,6 +22,8 @@ export default function Game() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
+  const [showVIPModal, setShowVIPModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { toast } = useToast();
 
   // Fetch user data
@@ -98,9 +102,9 @@ export default function Game() {
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27none%27 fill-rule=%27evenodd%27%3E%3Cg fill=%27%23ff69b4%27 fill-opacity=%270.05%27%3E%3Ccircle cx=%2730%27 cy=%2730%27 r=%272%27/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-      {/* Top Status Bar - Similar to reference */}
+      {/* Top Status Bar - Reorganized as requested */}
       <div className="relative z-10 flex justify-between items-center p-4">
-        {/* Left: User Info */}
+        {/* Left: User Info - Player name above level */}
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
             <img 
@@ -109,33 +113,40 @@ export default function Game() {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-            LV.{user.level}/10
-          </div>
-          <div className="text-white font-bold">
-            {user.username} 🏷️$WIF
+          <div className="flex flex-col">
+            <div className="text-white font-bold text-sm">
+              {user.username}
+            </div>
+            <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+              LV.{user.level}/10
+            </div>
           </div>
         </div>
 
-        {/* Right: Resources */}
-        <div className="flex items-center space-x-4">
-          {/* Sugar per Hour */}
-          <div className="bg-pink-500/80 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
-            <span>🍬</span>
-            <span>+{stats?.pointsPerSecond ? stats.pointsPerSecond * 3600 : 16933}</span>
-            <span className="text-green-300 text-xs">10%</span>
+        {/* Right: Resources - Stacked layout */}
+        <div className="flex flex-col items-end space-y-2">
+          {/* Top row: Lust Points and Lust Gems */}
+          <div className="flex items-center space-x-3">
+            <div className="bg-pink-500/80 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
+              <span>💗</span>
+              <span>{user.points.toLocaleString()}</span>
+            </div>
+            <div className="bg-purple-500/80 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
+              <span>💎</span>
+              <span>{user.level * 25}</span>
+            </div>
           </div>
           
-          {/* Current Points */}
+          {/* Middle: Per Hour Rate */}
           <div className="bg-green-500/80 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
-            <span>💎</span>
-            <span>{stats?.totalPoints ? stats.totalPoints.toLocaleString() : "2,430"}</span>
+            <span>📈</span>
+            <span>+{stats?.pointsPerSecond ? (stats.pointsPerSecond * 3600).toLocaleString() : "0"}/hr</span>
           </div>
           
-          {/* Energy */}
+          {/* Bottom: Energy */}
           <div className="bg-yellow-500/80 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
             <span>⚡</span>
-            <span>{stats?.currentEnergy !== undefined ? `${stats.currentEnergy}/${stats.maxEnergy}` : "4500/4500"}</span>
+            <span>{user.energy}/{user.maxEnergy}</span>
           </div>
         </div>
       </div>
@@ -174,8 +185,8 @@ export default function Game() {
         </Button>
         
         <Button
-          onClick={() => setShowAdminPanel(true)}
-          className="w-14 h-14 rounded-full bg-purple-500/90 hover:bg-purple-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
+          onClick={() => setShowSettingsModal(true)}
+          className="w-14 h-14 rounded-full bg-gray-500/90 hover:bg-gray-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
         >
           <div className="text-center">
             <div className="text-lg">⚙️</div>
@@ -212,11 +223,11 @@ export default function Game() {
           </Button>
 
           <Button
-            onClick={() => toast({ title: "Shop", description: "Coming soon!" })}
+            onClick={() => setShowVIPModal(true)}
             className="flex flex-col items-center space-y-1 bg-transparent hover:bg-white/10 text-white p-3 rounded-lg"
           >
-            <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center text-sm">🛒</div>
-            <span className="text-xs">Shop</span>
+            <div className="w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center text-sm">👑</div>
+            <span className="text-xs">VIP</span>
           </Button>
 
           <Button
@@ -260,6 +271,18 @@ export default function Game() {
       <AchievementsModal
         isOpen={showAchievementsModal}
         onClose={() => setShowAchievementsModal(false)}
+        userId={MOCK_USER_ID}
+      />
+      
+      <VIPModal
+        isOpen={showVIPModal}
+        onClose={() => setShowVIPModal(false)}
+        userId={MOCK_USER_ID}
+      />
+      
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
         userId={MOCK_USER_ID}
       />
     </div>

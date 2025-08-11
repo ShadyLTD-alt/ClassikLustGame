@@ -310,6 +310,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/characters", async (req, res) => {
+    try {
+      const characters = await storage.getAllCharacters();
+      res.json(characters);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/characters", async (req, res) => {
+    try {
+      const characterData = insertCharacterSchema.parse(req.body);
+      const character = await storage.createCharacter(characterData);
+      res.json(character);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid character data" });
+    }
+  });
+
+  app.get("/api/admin/media", async (req, res) => {
+    try {
+      const media = await storage.getAllMedia();
+      res.json(media);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/media/upload", async (req, res) => {
+    try {
+      const { filename, fileType, url } = req.body;
+      const media = await storage.uploadMedia({
+        filename,
+        fileType,
+        url: url || `/uploads/${filename}`,
+        uploadedBy: "admin"
+      });
+      res.json(media);
+    } catch (error) {
+      res.status(400).json({ error: "Upload failed" });
+    }
+  });
+
+  // VIP routes
+  app.get("/api/vip/status/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      // Mock VIP status for now
+      res.json({ isActive: false, planType: null, endDate: null });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/vip/purchase", async (req, res) => {
+    try {
+      const { userId, planId } = req.body;
+      // Mock VIP purchase
+      const endDate = new Date();
+      if (planId === "daily") endDate.setDate(endDate.getDate() + 1);
+      else if (planId === "weekly") endDate.setDate(endDate.getDate() + 7);
+      else if (planId === "monthly") endDate.setDate(endDate.getDate() + 30);
+      
+      res.json({ 
+        planType: planId, 
+        isActive: true, 
+        endDate: endDate.toISOString(),
+        message: "VIP purchase successful!" 
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Purchase failed" });
+    }
+  });
+
+  // Settings routes
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getGameSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/settings/toggle-nsfw/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, {
+        nsfwEnabled: !user.nsfwEnabled
+      });
+      
+      res.json({ nsfwEnabled: updatedUser?.nsfwEnabled });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Events routes
+  app.get("/api/events/active", async (req, res) => {
+    try {
+      // Mock active events for now
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/export", async (req, res) => {
     try {
       const data = await storage.exportAllData();

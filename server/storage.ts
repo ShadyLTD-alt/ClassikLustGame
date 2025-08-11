@@ -60,12 +60,14 @@ export interface IStorage {
   exportAllData(): Promise<any>;
 
   // Media management
-  getMediaFiles(characterId?: string): Promise<MediaFile[]>;
+  getAllMedia(): Promise<MediaFile[]>;
   getMediaFile(id: string): Promise<MediaFile | undefined>;
-  saveMediaFile(file: MediaFile): Promise<void>;
+  uploadMedia(file: any): Promise<MediaFile>;
   updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined>;
   deleteMediaFile(id: string): Promise<void>;
-  assignMediaToCharacter(mediaId: string, characterId: string): Promise<void>;
+  
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -658,6 +660,42 @@ export class MemStorage implements IStorage {
 
   async deleteEvent(id: string): Promise<void> {
     this.events.delete(id);
+  }
+
+  async getAllMedia(): Promise<MediaFile[]> {
+    return Array.from(this.mediaFiles.values());
+  }
+
+  async getMediaFile(id: string): Promise<MediaFile | undefined> {
+    return this.mediaFiles.get(id);
+  }
+
+  async uploadMedia(file: any): Promise<MediaFile> {
+    const id = randomUUID();
+    const media: MediaFile = {
+      id,
+      filename: file.filename,
+      fileType: file.fileType,
+      url: file.url,
+      characterId: file.characterId || null,
+      uploadedBy: file.uploadedBy,
+      createdAt: new Date()
+    };
+    this.mediaFiles.set(id, media);
+    return media;
+  }
+
+  async updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined> {
+    const media = this.mediaFiles.get(id);
+    if (!media) return undefined;
+
+    const updatedMedia = { ...media, ...updates };
+    this.mediaFiles.set(id, updatedMedia);
+    return updatedMedia;
+  }
+
+  async deleteMediaFile(id: string): Promise<void> {
+    this.mediaFiles.delete(id);
   }
 }
 

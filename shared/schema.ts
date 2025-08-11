@@ -41,6 +41,7 @@ export const characters = pgTable("characters", {
   }),
   responseTimeMin: integer("responseTimeMin").notNull().default(1),
   responseTimeMax: integer("responseTimeMax").notNull().default(3),
+  responseTimeMs: integer("responseTimeMs").notNull().default(2000),
   randomPictureSending: boolean("randomPictureSending").notNull().default(false),
   pictureSendChance: integer("pictureSendChance").notNull().default(5),
   customTriggerWords: jsonb("customTriggerWords").default([]),
@@ -48,6 +49,8 @@ export const characters = pgTable("characters", {
   customResponses: jsonb("customResponses").default([]),
   likes: text("likes").default(""),
   dislikes: text("dislikes").default(""),
+  description: text("description").default(""),
+  level: integer("level").notNull().default(1),
   isNsfw: boolean("isNsfw").notNull().default(false),
   isVip: boolean("isVip").notNull().default(false),
   isEvent: boolean("isEvent").notNull().default(false),
@@ -114,100 +117,98 @@ export const chatMessages = pgTable("chatMessages", {
   createdAt: timestamp("createdAt").notNull().default(sql`now()`)
 });
 
+export const mediaFiles = pgTable("mediaFiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  filename: text("filename").notNull(),
+  fileType: text("fileType").notNull(),
+  url: text("url").notNull(),
+  characterId: varchar("characterId"),
+  uploadedBy: varchar("uploadedBy"),
+  createdAt: timestamp("createdAt").notNull().default(sql`now()`)
+});
+
 export const gameSettings = pgTable("gameSettings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   energyRegenRate: integer("energyRegenRate").notNull().default(1),
   maxEnergyBonus: integer("maxEnergyBonus").notNull().default(0),
   nsfwEnabled: boolean("nsfwEnabled").notNull().default(false),
   wheelRewards: jsonb("wheelRewards").notNull(),
+  chatRandomPercentage: integer("chatRandomPercentage").notNull().default(15),
+  vipBenefits: jsonb("vipBenefits").default({
+    daily: { coins: 500, gems: 24, energyRegen: 50, exclusiveChars: true, vipChat: true },
+    weekly: { coins: 2000, gems: 7, energyRegen: 100, allExclusive: true, prioritySupport: true, dailyBonus: true },
+    monthly: { coins: 6000, gems: 30, energyRegen: 200, unlimited: true, customChars: true, monthlyEvents: true }
+  }),
+  levelRequirements: jsonb("levelRequirements").default([
+    { level: 1, pointsRequired: 0 },
+    { level: 2, pointsRequired: 1000 },
+    { level: 3, pointsRequired: 2500 },
+    { level: 4, pointsRequired: 5000 },
+    { level: 5, pointsRequired: 10000 },
+    { level: 6, pointsRequired: 20000 },
+    { level: 7, pointsRequired: 40000 },
+    { level: 8, pointsRequired: 75000 },
+    { level: 9, pointsRequired: 125000 },
+    { level: 10, pointsRequired: 200000 }
+  ]),
   updatedAt: timestamp("updatedAt").notNull().default(sql`now()`)
 });
 
-export const mediaFiles = pgTable("mediaFiles", {
+export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  filename: text("filename").notNull(),
-  originalName: text("originalName").notNull(),
-  mimeType: text("mimeType").notNull(),
-  size: integer("size").notNull(),
-  path: text("path").notNull(),
-  characterId: varchar("characterId"),
-  uploadedBy: varchar("uploadedBy").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'character_unlock', 'bonus_points', 'special_wheel'
+  isActive: boolean("isActive").notNull().default(true),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  rewards: jsonb("rewards").notNull(),
+  requirements: jsonb("requirements").default({}),
   createdAt: timestamp("createdAt").notNull().default(sql`now()`)
 });
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  level: true,
-  points: true,
-  energy: true,
-  maxEnergy: true,
-  hourlyRate: true,
-  isAdmin: true,
-  nsfwEnabled: true,
-  createdAt: true
+export const userVip = pgTable("userVip", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("userId").notNull(),
+  planType: text("planType").notNull(), // 'daily', 'weekly', 'monthly'
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  isActive: boolean("isActive").notNull().default(true),
+  autoRenew: boolean("autoRenew").notNull().default(false),
+  benefits: jsonb("benefits").notNull()
 });
 
-export const insertCharacterSchema = createInsertSchema(characters).omit({
-  id: true
-});
-
-export const insertUpgradeSchema = createInsertSchema(upgrades).omit({
-  id: true
-});
-
-export const insertGameStatsSchema = createInsertSchema(gameStats).omit({
-  id: true
-});
-
-export const insertWheelRewardSchema = createInsertSchema(wheelRewards).omit({
-  id: true
-});
-
-export const insertUserCharacterSchema = createInsertSchema(userCharacters).omit({
-  id: true,
-  unlockedAt: true
-});
-
-export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertGameSettingsSchema = createInsertSchema(gameSettings).omit({
-  id: true,
-  updatedAt: true
-});
-
-export const insertMediaFileSchema = createInsertSchema(mediaFiles).omit({
-  id: true,
-  createdAt: true
-});
-
-// Types
+// Type exports
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
 export type Character = typeof characters.$inferSelect;
-export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
-
 export type Upgrade = typeof upgrades.$inferSelect;
-export type InsertUpgrade = z.infer<typeof insertUpgradeSchema>;
-
 export type GameStats = typeof gameStats.$inferSelect;
-export type InsertGameStats = z.infer<typeof insertGameStatsSchema>;
-
 export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
-
-export type GameSettings = typeof gameSettings.$inferSelect;
-export type InsertGameSettings = z.infer<typeof insertGameSettingsSchema>;
-
 export type MediaFile = typeof mediaFiles.$inferSelect;
-export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
-
+export type Event = typeof events.$inferSelect;
+export type UserVip = typeof userVip.$inferSelect;
+export type GameSettings = typeof gameSettings.$inferSelect;
 export type WheelReward = typeof wheelRewards.$inferSelect;
-export type InsertWheelReward = z.infer<typeof insertWheelRewardSchema>;
-
 export type UserCharacter = typeof userCharacters.$inferSelect;
-export type InsertUserCharacter = z.infer<typeof insertUserCharacterSchema>;
+
+// Insert schemas
+export const insertUserSchema = createInsertSchema(users);
+export const insertCharacterSchema = createInsertSchema(characters);
+export const insertUpgradeSchema = createInsertSchema(upgrades);
+export const insertChatMessageSchema = createInsertSchema(chatMessages);
+export const insertMediaFileSchema = createInsertSchema(mediaFiles);
+export const insertEventSchema = createInsertSchema(events);
+export const insertUserVipSchema = createInsertSchema(userVip);
+export const insertGameSettingsSchema = createInsertSchema(gameSettings);
+export const insertGameStatsSchema = createInsertSchema(gameStats);
+
+// Insert types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
+export type InsertUpgrade = z.infer<typeof insertUpgradeSchema>;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type InsertUserVip = z.infer<typeof insertUserVipSchema>;
+export type InsertGameSettings = z.infer<typeof insertGameSettingsSchema>;
+export type InsertGameStats = z.infer<typeof insertGameStatsSchema>;
