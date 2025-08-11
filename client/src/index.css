@@ -3,6 +3,189 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 9% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 9%;
+    --primary: 220 90% 56%;
+    --primary-foreground: 220 9% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 9%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 90% 56%;
+    --radius: 0.5rem;
+    
+    /* ClassikLust Game Theme */
+    --game-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --game-card: rgba(255, 255, 255, 0.1);
+    --game-accent: #ff6b9d;
+    --game-secondary: #4facfe;
+    --anime-pink: #ff69b4;
+    --anime-purple: #9370db;
+    --anime-blue: #00bfff;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 213 31% 91%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 263 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ClassikLust Game Specific Styles */
+.game-container {
+  background: var(--game-bg);
+  min-height: 100vh;
+}
+
+.game-card {
+  background: var(--game-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.anime-gradient {
+  background: linear-gradient(45deg, var(--anime-pink), var(--anime-purple));
+}
+
+.character-card {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(147, 112, 219, 0.1) 100%);
+  border: 1px solid rgba(255, 107, 157, 0.3);
+  transition: all 0.3s ease;
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(255, 107, 157, 0.3);
+}
+
+.tap-button {
+  background: radial-gradient(circle, var(--anime-pink) 0%, var(--anime-purple) 100%);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+}
+
+.tap-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.6);
+}
+
+.tap-button:active {
+  transform: scale(0.95);
+}
+
+.energy-bar {
+  background: linear-gradient(90deg, var(--anime-blue), var(--anime-purple));
+}
+
+.coin-animation {
+  animation: coinFloat 2s ease-in-out infinite;
+}
+
+@keyframes coinFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.character-unlock-glow {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 157, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(255, 107, 157, 0.8); }
+}
+
+/* Wheel Spin Animation */
+.wheel-spin {
+  animation: spin 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(1800deg); }
+}
+
+/* Chat Bubble Animations */
+.chat-bubble-enter {
+  animation: bubbleEnter 0.3s ease-out;
+}
+
+@keyframes bubbleEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Admin Panel Dark Theme */
+.admin-panel {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.admin-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 1rem;
+  }
+  
+  .character-card {
+    margin-bottom: 1rem;
+  }
+  
+  .tap-button {
+    width: 200px;
+    height: 200px;
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(210, 25%, 7.8431%);

@@ -1,7 +1,43 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
+import sharp from "sharp";
+import path from "path";
+import { promises as fs } from "fs";
+import fsSync from "fs";
 import { storage } from "./storage";
-import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema } from "@shared/schema";
+import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
+
+// Configure multer for file uploads
+const uploadDir = './public/uploads';
+const storage_multer = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error as Error, uploadDir);
+    }
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage_multer,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -145,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const messageData = insertChatMessageSchema.parse(req.body);
       const message = await storage.createChatMessage(messageData);
-      
+
       // TODO: Add AI response generation here
       // For now, return a simple response
       const aiResponse = await storage.createChatMessage({
@@ -154,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "I understand! Thanks for talking with me.",
         isFromUser: false
       });
-      
+
       res.json({ userMessage: message, aiResponse });
     } catch (error) {
       res.status(400).json({ error: "Invalid message data" });
@@ -227,14 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.body;
       const lastSpin = await storage.getLastWheelSpin(userId);
-      
+
       // Check if user can spin (once per day)
       if (lastSpin) {
         const now = new Date();
         const lastSpinDate = new Date(lastSpin);
         const timeDiff = now.getTime() - lastSpinDate.getTime();
         const hoursDiff = timeDiff / (1000 * 3600);
-        
+
         if (hoursDiff < 24) {
           return res.status(400).json({ error: "Daily spin already used" });
         }
@@ -242,13 +278,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get game settings for rewards
       const settings = await storage.getGameSettings();
-      const rewards = settings.wheelRewards;
-      
+      const rewards = settings.wheelRewards as any[];
+
       // Select random reward
       const rand = Math.random();
       let cumProb = 0;
       let selectedReward;
-      
+
       for (const reward of rewards) {
         cumProb += reward.probability;
         if (rand <= cumProb) {
@@ -256,16 +292,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         }
       }
-      
+
       if (!selectedReward) {
-        selectedReward = rewards[0]; // fallback
+        selectedReward = rewards[0] as any; // fallback
       }
 
       // Apply reward
       let rewardAmount = 0;
       if (selectedReward.type !== 'character') {
         rewardAmount = Math.floor(Math.random() * (selectedReward.max! - selectedReward.min! + 1)) + selectedReward.min!;
-        
+
         const user = await storage.getUser(userId);
         if (user) {
           const updates: any = {};
@@ -447,6 +483,331 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(settings);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ===== IMAGE MANAGEMENT SYSTEM =====
+
+  // Get all media files with optional character filter
+  app.get("/api/media", async (req, res) => {
+    try {
+      const { characterId, level, nsfw, sortBy = 'createdAt' } = req.query;
+      let mediaFiles = await storage.getMediaFiles(characterId as string);
+
+      // Filter by NSFW if specified
+      if (nsfw !== undefined) {
+        const nsfwFilter = nsfw === 'true';
+        const filteredFiles = [];
+        for (const file of mediaFiles) {
+          const character = await storage.getCharacter(file.characterId || '');
+          if (character ? character.isNsfw === nsfwFilter : false) {
+            filteredFiles.push(file);
+          }
+        }
+        mediaFiles = filteredFiles;
+      }
+
+      // Sort by specified field
+      mediaFiles.sort((a, b) => {
+        if (sortBy === 'createdAt') {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        } else if (sortBy === 'filename') {
+          return a.filename.localeCompare(b.filename);
+        }
+        return 0;
+      });
+
+      res.json(mediaFiles);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Upload single or multiple images with processing
+  app.post("/api/media/upload", upload.array('images', 10), async (req, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      const { characterId, userId, processOptions } = req.body;
+
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "No files uploaded" });
+      }
+
+      const uploadedFiles = [];
+
+      for (const file of files) {
+        try {
+          // Process image with Sharp if options provided
+          let processedPath = file.path;
+          if (processOptions) {
+            try {
+              const options = JSON.parse(processOptions);
+              const processedFilename = 'processed-' + file.filename;
+              processedPath = path.join(uploadDir, processedFilename);
+
+              let sharpProcessor = sharp(file.path);
+
+              // Apply cropping if specified
+              if (options.crop) {
+                sharpProcessor = sharpProcessor.extract({
+                  left: options.crop.x,
+                  top: options.crop.y,
+                  width: options.crop.width,
+                  height: options.crop.height
+                });
+              }
+
+              // Apply resizing if specified
+              if (options.resize) {
+                sharpProcessor = sharpProcessor.resize(options.resize.width, options.resize.height);
+              }
+
+              // Apply format conversion
+              if (options.format) {
+                sharpProcessor = sharpProcessor.toFormat(options.format);
+              }
+
+              await sharpProcessor.toFile(processedPath);
+
+              // Delete original file
+              await fs.unlink(file.path);
+            } catch (processError) {
+              console.warn('Image processing failed, using original:', processError);
+              processedPath = file.path;
+            }
+          }
+
+          // Save to database
+          const mediaFile = {
+            filename: path.basename(processedPath),
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: (await fs.stat(processedPath)).size,
+            path: `/uploads/${path.basename(processedPath)}`,
+            characterId: characterId || null,
+            uploadedBy: userId || 'anonymous'
+          };
+
+          const savedFile = await storage.saveMediaFile(mediaFile as any);
+          uploadedFiles.push(savedFile);
+        } catch (fileError) {
+          console.error('Error processing file:', file.originalname, fileError);
+          // Continue with next file instead of failing completely
+        }
+      }
+
+      res.json({
+        success: true,
+        files: uploadedFiles,
+        message: `${uploadedFiles.length} file(s) uploaded successfully`
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      res.status(500).json({ error: error.message || 'Upload failed' });
+    }
+  });
+
+  // Get specific media file
+  app.get("/api/media/:id", async (req, res) => {
+    try {
+      const mediaFile = await storage.getMediaFile(req.params.id);
+      if (!mediaFile) {
+        return res.status(404).json({ error: "Media file not found" });
+      }
+      res.json(mediaFile);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update media file metadata
+  app.patch("/api/media/:id", async (req, res) => {
+    try {
+      const { characterId, tags, description } = req.body;
+      const updatedFile = await storage.updateMediaFile(req.params.id, {
+        characterId,
+        // Add support for tags and description in schema if needed
+      });
+
+      if (!updatedFile) {
+        return res.status(404).json({ error: "Media file not found" });
+      }
+
+      res.json(updatedFile);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Delete media file
+  app.delete("/api/media/:id", async (req, res) => {
+    try {
+      const mediaFile = await storage.getMediaFile(req.params.id);
+      if (!mediaFile) {
+        return res.status(404).json({ error: "Media file not found" });
+      }
+
+      // Delete physical file
+      const fullPath = path.join('./public', mediaFile.path);
+      try {
+        await fs.unlink(fullPath);
+      } catch (err) {
+        console.warn('Could not delete physical file:', fullPath);
+      }
+
+      // Delete from database
+      await storage.deleteMediaFile(req.params.id);
+
+      res.json({ success: true, message: "Media file deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Assign media to character
+  app.post("/api/media/:id/assign", async (req, res) => {
+    try {
+      const { characterId } = req.body;
+      await storage.assignMediaToCharacter(req.params.id, characterId);
+      res.json({ success: true, message: "Media assigned to character" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Crop/edit image endpoint
+  app.post("/api/media/:id/edit", async (req, res) => {
+    try {
+      const { crop, resize, format, quality } = req.body;
+      const mediaFile = await storage.getMediaFile(req.params.id);
+
+      if (!mediaFile) {
+        return res.status(404).json({ error: "Media file not found" });
+      }
+
+      const originalPath = path.join('./public', mediaFile.path);
+      const editedFilename = 'edited-' + Date.now() + '-' + mediaFile.filename;
+      const editedPath = path.join(uploadDir, editedFilename);
+
+      let sharpProcessor = sharp(originalPath);
+
+      // Apply transformations
+      if (crop) {
+        sharpProcessor = sharpProcessor.extract({
+          left: crop.x,
+          top: crop.y,
+          width: crop.width,
+          height: crop.height
+        });
+      }
+
+      if (resize) {
+        sharpProcessor = sharpProcessor.resize(resize.width, resize.height);
+      }
+
+      if (format) {
+        sharpProcessor = sharpProcessor.toFormat(format, { quality: quality || 90 });
+      }
+
+      await sharpProcessor.toFile(editedPath);
+
+      // Create new media file entry
+      const editedFile = {
+        filename: editedFilename,
+        originalName: `edited-${mediaFile.originalName}`,
+        mimeType: format ? `image/${format}` : mediaFile.mimeType,
+        size: (await fs.stat(editedPath)).size,
+        path: `/uploads/${editedFilename}`,
+        characterId: mediaFile.characterId,
+        uploadedBy: mediaFile.uploadedBy
+      };
+
+      await storage.saveMediaFile(editedFile as any);
+
+      res.json({
+        success: true,
+        editedFile,
+        message: "Image edited successfully"
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin routes for characters
+  app.get("/api/admin/characters", async (req, res) => {
+    try {
+      const characters = await storage.getAllCharacters();
+      res.json(characters);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/media", async (req, res) => {
+    try {
+      const mediaFiles = await storage.getMediaFiles();
+      res.json(mediaFiles);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Character management routes
+  app.get("/api/character/:id", async (req, res) => {
+    try {
+      const character = await storage.getCharacter(req.params.id);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
+      res.json(character);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/character/:id", async (req, res) => {
+    try {
+      const character = await storage.updateCharacter(req.params.id, req.body);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
+      res.json(character);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/character/:id", async (req, res) => {
+    try {
+      await storage.deleteCharacter(req.params.id);
+      res.json({ success: true, message: "Character deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Serve uploaded files
+  app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+  });
+
+  // Placeholder image endpoint
+  app.get('/api/placeholder-image', (req, res) => {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(`<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ccc"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="#666">No Image</text></svg>`);
+  });
+
+  // Serve uploaded media files
+  app.get('/api/media/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+
+    if (fsSync.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: 'File not found' });
     }
   });
 
