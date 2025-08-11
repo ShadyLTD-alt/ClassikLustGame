@@ -98,13 +98,14 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
           </DialogHeader>
 
           <div className="space-y-6">
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5 bg-black/20">
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-6 bg-black/20">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="characters">Characters</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="media">Media</TabsTrigger>
                 <TabsTrigger value="tools">Tools</TabsTrigger>
+                <TabsTrigger value="character-editor">Edit</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -157,12 +158,29 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                       <CardContent className="p-4">
                         <div className="text-center">
                           <div className="text-lg font-bold text-white">{character.name}</div>
-                          <div className="text-sm text-gray-300">{character.description}</div>
+                          <div className="text-sm text-gray-300">{character.bio || character.description}</div>
                           <div className="mt-2 flex justify-center space-x-2">
-                            <Badge variant="secondary">Lvl {character.unlockLevel}</Badge>
+                            <Badge variant="secondary">Lvl {character.requiredLevel || character.unlockLevel || 1}</Badge>
                             <Badge variant="outline" className="text-white">
-                              {character.rarity}
+                              {character.personality || 'friendly'}
                             </Badge>
+                          </div>
+                          <div className="mt-3 flex justify-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditCharacter(character)}
+                              className="border-gray-600 text-white hover:bg-white/10"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteCharacter(character.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -211,14 +229,17 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {mediaFiles.map((media) => (
-                    <Card key={media.id} className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
+                    <Card key={media.id || media.filename} className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                       <CardContent className="p-2">
                         <img 
-                          src={`/api/media/${media.id}`} 
-                          alt={media.filename} 
+                          src={media.path || `/uploads/${media.filename}`} 
+                          alt={media.originalName || media.filename} 
                           className="w-full h-auto rounded aspect-square object-cover bg-gray-700 mb-2"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/api/placeholder-image';
+                          }}
                         />
-                        <div className="text-xs text-white truncate">{media.filename}</div>
+                        <div className="text-xs text-white truncate">{media.originalName || media.filename}</div>
                       </CardContent>
                     </Card>
                   ))}

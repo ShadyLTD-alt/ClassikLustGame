@@ -62,7 +62,7 @@ interface CharacterCreationProps {
   editingCharacter?: any;
 }
 
-export default function CharacterCreation({ isOpen, onClose, editingCharacter }: CharacterCreationProps = {}) {
+export default function CharacterCreation({ isOpen, onClose, editingCharacter }: CharacterCreationProps) {
   const [moodDistribution, setMoodDistribution] = useState<MoodDistribution>({
     normal: 70,
     happy: 20,
@@ -83,7 +83,30 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
 
   const form = useForm<CharacterFormData>({
     resolver: zodResolver(characterSchema),
-    defaultValues: {
+    defaultValues: editingCharacter ? {
+      name: editingCharacter.name || "",
+      bio: editingCharacter.bio || "",
+      backstory: editingCharacter.backstory || "",
+      interests: editingCharacter.interests || "",
+      quirks: editingCharacter.quirks || "",
+      imageUrl: editingCharacter.imageUrl || "",
+      avatarUrl: editingCharacter.avatarUrl || "",
+      requiredLevel: editingCharacter.requiredLevel || 1,
+      personality: editingCharacter.personality || "friendly",
+      chatStyle: editingCharacter.chatStyle || "casual",
+      personalityStyle: editingCharacter.personalityStyle || "Sweet & Caring",
+      responseTimeMin: editingCharacter.responseTimeMin || 1,
+      responseTimeMax: editingCharacter.responseTimeMax || 3,
+      randomPictureSending: editingCharacter.randomPictureSending || false,
+      pictureSendChance: editingCharacter.pictureSendChance || 5,
+      likes: editingCharacter.likes || "",
+      dislikes: editingCharacter.dislikes || "",
+      isNsfw: editingCharacter.isNsfw || false,
+      isVip: editingCharacter.isVip || false,
+      isEvent: editingCharacter.isEvent || false,
+      isWheelReward: editingCharacter.isWheelReward || false,
+      userId: "mock-user-id"
+    } : {
       name: "",
       bio: "",
       backstory: "",
@@ -116,15 +139,25 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
   });
 
   const createCharacterMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/character', { method: 'POST', body: data }),
+    mutationFn: (data: any) => {
+      const url = editingCharacter ? `/api/character/${editingCharacter.id}` : '/api/character';
+      const method = editingCharacter ? 'PUT' : 'POST';
+      return apiRequest(url, { method, body: data });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/characters'] });
-      toast({ title: "Success", description: "Character created successfully!" });
-      form.reset();
-      setMoodDistribution({ normal: 70, happy: 20, flirty: 10, playful: 0, mysterious: 0, shy: 0 });
-      setCustomGreetings([]);
-      setCustomResponses([]);
-      setCustomTriggerWords([]);
+      toast({ 
+        title: "Success", 
+        description: editingCharacter ? "Character updated successfully!" : "Character created successfully!" 
+      });
+      if (!editingCharacter) {
+        form.reset();
+        setMoodDistribution({ normal: 70, happy: 20, flirty: 10, playful: 0, mysterious: 0, shy: 0 });
+        setCustomGreetings([]);
+        setCustomResponses([]);
+        setCustomTriggerWords([]);
+      }
+      if (onClose) onClose();
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -844,7 +877,10 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
               Reset Form
             </Button>
             <Button type="submit" disabled={createCharacterMutation.isPending}>
-              {createCharacterMutation.isPending ? "Creating..." : "Create Character"}
+              {createCharacterMutation.isPending 
+                ? (editingCharacter ? "Updating..." : "Creating...") 
+                : (editingCharacter ? "Update Character" : "Create Character")
+              }
               <Save className="ml-2 h-4 w-4" />
             </Button>
           </div>
