@@ -33,6 +33,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
   const [selectedTab, setSelectedTab] = useState("characters");
   const [editingCharacter, setEditingCharacter] = useState<any>(null);
+  const [showImageManager, setShowImageManager] = useState(false);
+  const [showWheelGame, setShowWheelGame] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
