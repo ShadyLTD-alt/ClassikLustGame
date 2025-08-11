@@ -4,7 +4,7 @@ import multer from "multer";
 import sharp from "sharp";
 import path from "path";
 import { promises as fs } from "fs";
-import fs as fsSync from "fs";
+import fsSync from "fs";
 import { storage } from "./storage";
 import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
 
