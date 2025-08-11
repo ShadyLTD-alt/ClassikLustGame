@@ -346,7 +346,7 @@ export default function Game() {
             </TabsList>
 
             <TabsContent value="general" className="space-y-6">
-              <Card className="bg-dark-800/50 border-gray-600">
+              <Card className="bg-gray-800/80 border-gray-600">
                 <CardContent className="space-y-6 pt-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -394,7 +394,7 @@ export default function Game() {
             </TabsContent>
 
             <TabsContent value="content" className="space-y-6">
-              <Card className="bg-dark-800/50 border-gray-600">
+              <Card className="bg-gray-800/80 border-gray-600">
                 <CardContent className="space-y-6 pt-6">
                   <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
                     <div className="flex items-center justify-between">
@@ -421,7 +421,7 @@ export default function Game() {
             </TabsContent>
 
             <TabsContent value="audio" className="space-y-6">
-              <Card className="bg-dark-800/50 border-gray-600">
+              <Card className="bg-gray-800/80 border-gray-600">
                 <CardContent className="space-y-6 pt-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -452,7 +452,7 @@ export default function Game() {
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-6">
-              <Card className="bg-dark-800/50 border-gray-600">
+              <Card className="bg-gray-800/80 border-gray-600">
                 <CardContent className="space-y-6 pt-6">
                   <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-400 mb-2">Debug Information</h4>

@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import sharp from "sharp";
 import path from "path";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
+import fs as fsSync from "fs";
 import { storage } from "./storage";
 import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
 
@@ -24,7 +25,7 @@ const storage_multer = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage_multer,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
@@ -180,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const messageData = insertChatMessageSchema.parse(req.body);
       const message = await storage.createChatMessage(messageData);
-      
+
       // TODO: Add AI response generation here
       // For now, return a simple response
       const aiResponse = await storage.createChatMessage({
@@ -189,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "I understand! Thanks for talking with me.",
         isFromUser: false
       });
-      
+
       res.json({ userMessage: message, aiResponse });
     } catch (error) {
       res.status(400).json({ error: "Invalid message data" });
@@ -262,14 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.body;
       const lastSpin = await storage.getLastWheelSpin(userId);
-      
+
       // Check if user can spin (once per day)
       if (lastSpin) {
         const now = new Date();
         const lastSpinDate = new Date(lastSpin);
         const timeDiff = now.getTime() - lastSpinDate.getTime();
         const hoursDiff = timeDiff / (1000 * 3600);
-        
+
         if (hoursDiff < 24) {
           return res.status(400).json({ error: "Daily spin already used" });
         }
@@ -278,12 +279,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get game settings for rewards
       const settings = await storage.getGameSettings();
       const rewards = settings.wheelRewards as any[];
-      
+
       // Select random reward
       const rand = Math.random();
       let cumProb = 0;
       let selectedReward;
-      
+
       for (const reward of rewards) {
         cumProb += reward.probability;
         if (rand <= cumProb) {
@@ -291,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         }
       }
-      
+
       if (!selectedReward) {
         selectedReward = rewards[0] as any; // fallback
       }
@@ -300,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let rewardAmount = 0;
       if (selectedReward.type !== 'character') {
         rewardAmount = Math.floor(Math.random() * (selectedReward.max! - selectedReward.min! + 1)) + selectedReward.min!;
-        
+
         const user = await storage.getUser(userId);
         if (user) {
           const updates: any = {};
@@ -374,13 +375,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== IMAGE MANAGEMENT SYSTEM =====
-  
+
   // Get all media files with optional character filter
   app.get("/api/media", async (req, res) => {
     try {
       const { characterId, level, nsfw, sortBy = 'createdAt' } = req.query;
       let mediaFiles = await storage.getMediaFiles(characterId as string);
-      
+
       // Filter by NSFW if specified
       if (nsfw !== undefined) {
         const nsfwFilter = nsfw === 'true';
@@ -393,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         mediaFiles = filteredFiles;
       }
-      
+
       // Sort by specified field
       mediaFiles.sort((a, b) => {
         if (sortBy === 'createdAt') {
@@ -403,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return 0;
       });
-      
+
       res.json(mediaFiles);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -415,13 +416,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as Express.Multer.File[];
       const { characterId, userId, processOptions } = req.body;
-      
+
       if (!files || files.length === 0) {
         return res.status(400).json({ error: "No files uploaded" });
       }
-      
+
       const uploadedFiles = [];
-      
+
       for (const file of files) {
         try {
           // Process image with Sharp if options provided
@@ -431,9 +432,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const options = JSON.parse(processOptions);
               const processedFilename = 'processed-' + file.filename;
               processedPath = path.join(uploadDir, processedFilename);
-              
+
               let sharpProcessor = sharp(file.path);
-              
+
               // Apply cropping if specified
               if (options.crop) {
                 sharpProcessor = sharpProcessor.extract({
@@ -443,19 +444,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   height: options.crop.height
                 });
               }
-              
+
               // Apply resizing if specified
               if (options.resize) {
                 sharpProcessor = sharpProcessor.resize(options.resize.width, options.resize.height);
               }
-              
+
               // Apply format conversion
               if (options.format) {
                 sharpProcessor = sharpProcessor.toFormat(options.format);
               }
-              
+
               await sharpProcessor.toFile(processedPath);
-              
+
               // Delete original file
               await fs.unlink(file.path);
             } catch (processError) {
@@ -463,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               processedPath = file.path;
             }
           }
-          
+
           // Save to database
           const mediaFile = {
             filename: path.basename(processedPath),
@@ -474,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             characterId: characterId || null,
             uploadedBy: userId || 'anonymous'
           };
-          
+
           const savedFile = await storage.saveMediaFile(mediaFile as any);
           uploadedFiles.push(savedFile);
         } catch (fileError) {
@@ -482,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Continue with next file instead of failing completely
         }
       }
-      
+
       res.json({
         success: true,
         files: uploadedFiles,
@@ -515,11 +516,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         characterId,
         // Add support for tags and description in schema if needed
       });
-      
+
       if (!updatedFile) {
         return res.status(404).json({ error: "Media file not found" });
       }
-      
+
       res.json(updatedFile);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -533,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!mediaFile) {
         return res.status(404).json({ error: "Media file not found" });
       }
-      
+
       // Delete physical file
       const fullPath = path.join('./public', mediaFile.path);
       try {
@@ -541,10 +542,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (err) {
         console.warn('Could not delete physical file:', fullPath);
       }
-      
+
       // Delete from database
       await storage.deleteMediaFile(req.params.id);
-      
+
       res.json({ success: true, message: "Media file deleted successfully" });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -567,17 +568,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { crop, resize, format, quality } = req.body;
       const mediaFile = await storage.getMediaFile(req.params.id);
-      
+
       if (!mediaFile) {
         return res.status(404).json({ error: "Media file not found" });
       }
-      
+
       const originalPath = path.join('./public', mediaFile.path);
       const editedFilename = 'edited-' + Date.now() + '-' + mediaFile.filename;
       const editedPath = path.join(uploadDir, editedFilename);
-      
+
       let sharpProcessor = sharp(originalPath);
-      
+
       // Apply transformations
       if (crop) {
         sharpProcessor = sharpProcessor.extract({
@@ -587,17 +588,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           height: crop.height
         });
       }
-      
+
       if (resize) {
         sharpProcessor = sharpProcessor.resize(resize.width, resize.height);
       }
-      
+
       if (format) {
         sharpProcessor = sharpProcessor.toFormat(format, { quality: quality || 90 });
       }
-      
+
       await sharpProcessor.toFile(editedPath);
-      
+
       // Create new media file entry
       const editedFile = {
         filename: editedFilename,
@@ -608,9 +609,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         characterId: mediaFile.characterId,
         uploadedBy: mediaFile.uploadedBy
       };
-      
+
       await storage.saveMediaFile(editedFile as any);
-      
+
       res.json({
         success: true,
         editedFile,
@@ -678,6 +679,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     next();
+  });
+
+  // Placeholder image endpoint
+  app.get('/api/placeholder-image', (req, res) => {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(`<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ccc"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="#666">No Image</text></svg>`);
+  });
+
+  // Serve uploaded media files
+  app.get('/api/media/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+
+    if (fsSync.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: 'File not found' });
+    }
   });
 
   const httpServer = createServer(app);

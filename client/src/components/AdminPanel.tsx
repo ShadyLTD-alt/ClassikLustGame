@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import CharacterCreation from "@/components/CharacterCreation";
 import ImageManager from "@/components/ImageManager";
+import { Edit, Trash2 } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
 
@@ -22,10 +23,10 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
+  const [selectedTab, setSelectedTab] = useState("characters");
+  const [editingCharacter, setEditingCharacter] = useState<any>(null);
   const { toast } = useToast();
-  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
-  const [showImageManager, setShowImageManager] = useState(false);
-  const [showWheelGame, setShowWheelGame] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch admin data
   const { data: users = [] } = useQuery<User[]>({
@@ -48,19 +49,47 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     enabled: isOpen,
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ['/api/settings'],
+    queryFn: () => fetch('/api/settings').then(res => res.json())
+  });
+
+  const handleEditCharacter = (character: any) => {
+    setEditingCharacter(character);
+    setSelectedTab("character-editor");
+  };
+
+  const handleDeleteCharacter = async (characterId: string) => {
+    if (confirm('Are you sure you want to delete this character?')) {
+      try {
+        const response = await fetch(`/api/character/${characterId}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/characters'] });
+          toast({ title: "Success", description: "Character deleted successfully!" });
+        } else {
+          throw new Error('Failed to delete character');
+        }
+      } catch (error: any) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      }
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto admin-panel">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto admin-panel bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white border-purple-500/30">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">
               🎮 ClassikLust Admin Panel
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6">
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid grid-cols-5 w-full bg-black/20">
+              <TabsList className="grid w-full grid-cols-5 bg-black/20">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="characters">Characters</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
@@ -71,7 +100,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card className="admin-card">
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="text-white">👥 Total Users</CardTitle>
                     </CardHeader>
@@ -79,8 +108,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <div className="text-3xl font-bold text-white">{users.length}</div>
                     </CardContent>
                   </Card>
-                  
-                  <Card className="admin-card">
+
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="text-white">🎭 Characters</CardTitle>
                     </CardHeader>
@@ -88,8 +117,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <div className="text-3xl font-bold text-white">{characters.length}</div>
                     </CardContent>
                   </Card>
-                  
-                  <Card className="admin-card">
+
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="text-white">📁 Media Files</CardTitle>
                     </CardHeader>
@@ -111,10 +140,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     Create Character
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {characters.map((character) => (
-                    <Card key={character.id} className="admin-card character-card">
+                  {characters.map((character: any) => (
+                    <Card key={character.id} className="admin-card character-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                       <CardContent className="p-4">
                         <div className="text-center">
                           <div className="text-lg font-bold text-white">{character.name}</div>
@@ -137,7 +166,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 <h3 className="text-xl font-bold text-white">User Management</h3>
                 <div className="space-y-3">
                   {users.map((user) => (
-                    <Card key={user.id} className="admin-card">
+                    <Card key={user.id} className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                       <CardContent className="p-4 flex items-center justify-between">
                         <div>
                           <div className="font-medium text-white">{user.username}</div>
@@ -169,12 +198,16 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     Open Image Manager
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {mediaFiles.map((media) => (
-                    <Card key={media.id} className="admin-card">
+                    <Card key={media.id} className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                       <CardContent className="p-2">
-                        <div className="aspect-square bg-gray-700 rounded mb-2"></div>
+                        <img 
+                          src={`/api/media/${media.id}`} 
+                          alt={media.filename} 
+                          className="w-full h-auto rounded aspect-square object-cover bg-gray-700 mb-2"
+                        />
                         <div className="text-xs text-white truncate">{media.filename}</div>
                       </CardContent>
                     </Card>
@@ -185,7 +218,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               {/* Tools Tab */}
               <TabsContent value="tools" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="admin-card">
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="text-white">🎡 Wheel Game</CardTitle>
                     </CardHeader>
@@ -198,8 +231,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       </Button>
                     </CardContent>
                   </Card>
-                  
-                  <Card className="admin-card">
+
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
                       <CardTitle className="text-white">⚙️ System Settings</CardTitle>
                     </CardHeader>
@@ -208,12 +241,31 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         <Input 
                           placeholder="Global multiplier" 
                           className="bg-black/30 border-white/20 text-white" 
+                          defaultValue={settings?.globalMultiplier}
                         />
                         <Button className="w-full">Update Settings</Button>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="character-editor" className="space-y-6">
+                {editingCharacter ? (
+                  <CharacterCreation 
+                    isOpen={true} 
+                    onClose={() => setEditingCharacter(null)}
+                    editingCharacter={editingCharacter}
+                  />
+                ) : (
+                  <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                    <CardContent className="pt-6">
+                      <div className="text-center text-white">
+                        <p>Select a character to edit from the Characters tab</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
             </Tabs>
           </div>
@@ -234,7 +286,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           />
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={showImageManager} onOpenChange={setShowImageManager}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
           <DialogHeader>
@@ -248,7 +300,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           />
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={showWheelGame} onOpenChange={setShowWheelGame}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
           <DialogHeader>
@@ -257,7 +309,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            <Card className="admin-card">
+            <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
               <CardHeader>
                 <CardTitle className="text-white">Wheel Configuration</CardTitle>
               </CardHeader>

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -94,7 +93,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
     }
 
     const formData = new FormData();
-    
+
     // Add files
     Array.from(selectedFiles).forEach(file => {
       formData.append('images', file);
@@ -135,7 +134,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                   <SelectValue placeholder="Select character (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No specific character</SelectItem>
+                  <SelectItem value="unassigned">No specific character</SelectItem>
                   {characters.map((char: any) => (
                     <SelectItem key={char.id} value={char.id}>
                       {char.name}

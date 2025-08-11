@@ -59,9 +59,10 @@ interface MoodDistribution {
 interface CharacterCreationProps {
   isOpen?: boolean;
   onClose?: () => void;
+  editingCharacter?: any;
 }
 
-export default function CharacterCreation({ isOpen, onClose }: CharacterCreationProps = {}) {
+export default function CharacterCreation({ isOpen, onClose, editingCharacter }: CharacterCreationProps = {}) {
   const [moodDistribution, setMoodDistribution] = useState<MoodDistribution>({
     normal: 70,
     happy: 20,
@@ -336,10 +337,10 @@ export default function CharacterCreation({ isOpen, onClose }: CharacterCreation
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="none">No specific character</SelectItem>
+                              <SelectItem value="unassigned">No specific character</SelectItem>
                               {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id} value={file.path}>
-                                  {file.originalName}
+                                <SelectItem key={file.id || file.filename} value={file.path || `/uploads/${file.filename}`}>
+                                  {file.originalName || file.filename}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -362,10 +363,10 @@ export default function CharacterCreation({ isOpen, onClose }: CharacterCreation
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="none">Any Character</SelectItem>
+                              <SelectItem value="unassigned">Any Character</SelectItem>
                               {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id} value={file.path}>
-                                  {file.originalName}
+                                <SelectItem key={file.id || file.filename} value={file.path || `/uploads/${file.filename}`}>
+                                  {file.originalName || file.filename}
                                 </SelectItem>
                               ))}
                             </SelectContent>
