@@ -368,13 +368,13 @@ export class MemStorage implements IStorage {
   async deleteCharacter(id: string): Promise<void> {
     this.characters.delete(id);
     // Remove from selected characters
-    for (const [userId, charId] of this.selectedCharacters.entries()) {
+    for (const [userId, charId] of Array.from(this.selectedCharacters.entries())) {
       if (charId === id) {
         this.selectedCharacters.delete(userId);
       }
     }
     // Clear related media assignments
-    for (const [mediaId, media] of this.mediaFiles.entries()) {
+    for (const [mediaId, media] of Array.from(this.mediaFiles.entries())) {
       if (media.characterId === id) {
         this.mediaFiles.set(mediaId, { ...media, characterId: null });
       }
