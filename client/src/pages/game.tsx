@@ -43,6 +43,11 @@ import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
 const MOCK_USER_ID = "mock-user-id";
 
+// Check if user is admin (you can modify this logic based on your needs)
+const isCurrentUserAdmin = (user: User | undefined) => {
+  return user?.isAdmin || user?.username === "ShadowGoddess" || user?.id === MOCK_USER_ID;
+};
+
 export default function Game() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -220,7 +225,7 @@ export default function Game() {
           </div>
 
           {/* Top-Right Block */}
-          <div className="text-right">
+          <div className="text-right relative">
             <div className="text-white">
               <div className="text-sm">LP per Hour</div>
               <div className="text-lg font-bold text-green-400">+{stats?.pointsPerSecond ? (stats.pointsPerSecond * 3600).toLocaleString() : "1303"}</div>
@@ -237,6 +242,17 @@ export default function Game() {
               <span className="text-white text-sm">Energy</span>
               <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "5500"}</span>
             </div>
+            
+            {/* Admin Button - Only visible to admin users */}
+            {isCurrentUserAdmin(user) && (
+              <Button
+                onClick={() => setShowAdminPanel(true)}
+                className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg flex items-center justify-center p-0"
+                title="Admin Panel"
+              >
+                <Shield className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -269,7 +285,7 @@ export default function Game() {
           </Button>
           
           <Button
-            onClick={() => setShowAdminPanel(true)}
+            onClick={() => setShowUpgradeModal(true)}
             className="w-16 h-20 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-lg flex flex-col items-center justify-center"
           >
             <Star className="w-6 h-6" />
