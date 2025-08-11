@@ -55,6 +55,10 @@ export const gameStats = pgTable("gameStats", {
   userId: varchar("userId").notNull(),
   totalTaps: integer("totalTaps").notNull().default(0),
   totalEarned: integer("totalEarned").notNull().default(0),
+  totalPoints: integer("totalPoints").notNull().default(0),
+  pointsPerSecond: integer("pointsPerSecond").notNull().default(0),
+  currentEnergy: integer("currentEnergy").notNull().default(4500),
+  maxEnergy: integer("maxEnergy").notNull().default(4500),
   dailySpinUsed: timestamp("dailySpinUsed")
 });
 

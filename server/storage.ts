@@ -364,6 +364,10 @@ export class MemStorage implements IStorage {
         userId,
         totalTaps: 0,
         totalEarned: 0,
+        totalPoints: 0,
+        pointsPerSecond: 0,
+        currentEnergy: 4500,
+        maxEnergy: 4500,
         dailySpinUsed: null
       };
       this.gameStats.set(userId, defaultStats);

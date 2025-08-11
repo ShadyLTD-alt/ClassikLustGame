@@ -238,7 +238,8 @@ export default function Game() {
       <ChatModal
         isOpen={showChatModal}
         onClose={() => setShowChatModal(false)}
-        character={character}
+        characterId={character?.id || ""}
+        characterName={character?.name || "Character"}
         userId={MOCK_USER_ID}
       />
 

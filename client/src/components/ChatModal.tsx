@@ -17,10 +17,10 @@ interface ChatModalProps {
 interface ChatMessage {
   id: string;
   userId: string;
-  characterId: string;
-  userMessage: string;
-  characterResponse: string;
-  timestamp: Date;
+  characterId: string | null;
+  message: string;
+  isFromUser: boolean;
+  createdAt: Date;
 }
 
 export default function ChatModal({ isOpen, onClose, userId, characterId, characterName }: ChatModalProps) {
@@ -28,7 +28,7 @@ export default function ChatModal({ isOpen, onClose, userId, characterId, charac
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: ["/api/chat", userId, characterId],
     enabled: isOpen,
   });
@@ -39,6 +39,7 @@ export default function ChatModal({ isOpen, onClose, userId, characterId, charac
         userId,
         characterId,
         message: userMessage,
+        isFromUser: true
       });
       return response.json();
     },
@@ -96,31 +97,24 @@ export default function ChatModal({ isOpen, onClose, userId, characterId, charac
         <div className="flex-1 bg-white/10 rounded-2xl p-4 mb-4 overflow-y-auto backdrop-blur-sm">
           {isLoading ? (
             <div className="text-center text-white/70">Loading messages...</div>
-          ) : messages.length === 0 ? (
-            <div className="text-center text-white/70">Start a conversation with {characterName}!</div>
+          ) : !messages || messages.length === 0 ? (
+            <div className="text-center text-white/70">Start a conversation with {characterName || "Character"}!</div>
           ) : (
             <div className="space-y-3">
-              {messages.map((msg: ChatMessage) => (
-                <div key={msg.id} className="space-y-2">
-                  {/* User message */}
-                  <div className="flex justify-end">
-                    <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] text-sm">
-                      {msg.userMessage}
-                      {msg.userMessage.includes("😊") && <span className="ml-1">😊</span>}
-                    </div>
-                  </div>
-                  
-                  {/* Character response */}
-                  <div className="flex justify-start">
-                    <div className="bg-pink-500 text-white px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] text-sm">
-                      {msg.characterResponse}
-                    </div>
+              {messages?.map((msg: ChatMessage) => (
+                <div key={msg.id} className={`flex ${msg.isFromUser ? 'justify-end' : 'justify-start'} mb-2`}>
+                  <div className={`px-4 py-2 rounded-2xl max-w-[80%] text-sm ${
+                    msg.isFromUser 
+                      ? 'bg-blue-500 text-white rounded-br-md' 
+                      : 'bg-pink-500 text-white rounded-bl-md'
+                  }`}>
+                    {msg.message}
                   </div>
                 </div>
               ))}
               
               {/* Sample messages if none exist */}
-              {messages.length === 0 && (
+              {(!messages || messages.length === 0) && (
                 <div className="space-y-3">
                   <div className="flex justify-end">
                     <div className="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] text-sm">

@@ -131,23 +131,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chat routes
-  app.get("/api/chat/:userId", async (req, res) => {
+  app.get("/api/chat/:userId/:characterId?", async (req, res) => {
     try {
-      const { characterId } = req.query;
-      const messages = await storage.getChatMessages(req.params.userId, characterId as string);
+      const { characterId } = req.params;
+      const messages = await storage.getChatMessages(req.params.userId, characterId);
       res.json(messages);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
   });
 
-  app.post("/api/chat", async (req, res) => {
+  app.post("/api/chat/send", async (req, res) => {
     try {
       const messageData = insertChatMessageSchema.parse(req.body);
       const message = await storage.createChatMessage(messageData);
-      res.json(message);
+      
+      // TODO: Add AI response generation here
+      // For now, return a simple response
+      const aiResponse = await storage.createChatMessage({
+        userId: messageData.userId,
+        characterId: messageData.characterId,
+        message: "I understand! Thanks for talking with me.",
+        isFromUser: false
+      });
+      
+      res.json({ userMessage: message, aiResponse });
     } catch (error) {
       res.status(400).json({ error: "Invalid message data" });
+    }
+  });
+
+  app.delete("/api/chat/:userId/:characterId?", async (req, res) => {
+    try {
+      const { characterId } = req.params;
+      await storage.clearChatHistory(req.params.userId, characterId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
