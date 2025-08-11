@@ -160,26 +160,6 @@ export default function Game() {
       {/* Right Side Action Buttons */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 space-y-3 z-20">
         <Button
-          onClick={() => toast({ title: "Wheel", description: "Coming soon!" })}
-          className="w-14 h-14 rounded-full bg-pink-500/90 hover:bg-pink-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
-        >
-          <div className="text-center">
-            <div className="text-lg">🎯</div>
-            <div className="text-xs">Wheel</div>
-          </div>
-        </Button>
-        
-        <Button
-          onClick={() => toast({ title: "Power-ups", description: "Coming soon!" })}
-          className="w-14 h-14 rounded-full bg-orange-500/90 hover:bg-orange-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
-        >
-          <div className="text-center">
-            <div className="text-lg">⚡</div>
-            <div className="text-xs">Power Up</div>
-          </div>
-        </Button>
-        
-        <Button
           onClick={() => setShowAdminPanel(true)}
           className="w-14 h-14 rounded-full bg-purple-500/90 hover:bg-purple-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
         >
