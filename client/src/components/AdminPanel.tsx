@@ -20,9 +20,17 @@ import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/sch
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  showCharacterCreation?: boolean;
+  setShowCharacterCreation?: (show: boolean) => void;
 }
 
-export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
+export default function AdminPanel({ isOpen, onClose, showCharacterCreation = false, setShowCharacterCreation }: AdminPanelProps) {
+  const [localShowCharacterCreation, setLocalShowCharacterCreation] = useState(false);
+
+  // Use props if provided, otherwise use local state
+  const showCharacterCreationState = setShowCharacterCreation ? showCharacterCreation : localShowCharacterCreation;
+  const setShowCharacterCreationState = setShowCharacterCreation || setLocalShowCharacterCreation;
+
   const [selectedTab, setSelectedTab] = useState("characters");
   const [editingCharacter, setEditingCharacter] = useState<any>(null);
   const { toast } = useToast();
@@ -134,7 +142,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold text-white">Character Management</h3>
                   <Button 
-                    onClick={() => setShowCharacterCreation(true)}
+                    onClick={() => setShowCharacterCreationState(true)}
                     className="bg-pink-600 hover:bg-pink-700"
                   >
                     Create Character
@@ -249,7 +257,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   </Card>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="character-editor" className="space-y-6">
                 {editingCharacter ? (
                   <CharacterCreation 
@@ -273,7 +281,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       </Dialog>
 
       {/* Sub-modals */}
-      <Dialog open={showCharacterCreation} onOpenChange={setShowCharacterCreation}>
+      <Dialog open={showCharacterCreationState} onOpenChange={setShowCharacterCreationState}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">
@@ -281,8 +289,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             </DialogTitle>
           </DialogHeader>
           <CharacterCreation 
-            isOpen={showCharacterCreation} 
-            onClose={() => setShowCharacterCreation(false)} 
+            isOpen={showCharacterCreationState} 
+            onClose={() => setShowCharacterCreationState(false)} 
           />
         </DialogContent>
       </Dialog>

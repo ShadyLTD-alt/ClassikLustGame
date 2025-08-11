@@ -54,6 +54,8 @@ export default function Game() {
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showImageManager, setShowImageManager] = useState(false);
   const { toast } = useToast();
 
   // Settings state
