@@ -7,6 +7,7 @@ import CharacterDisplay from "@/components/CharacterDisplay";
 import UpgradeModal from "@/components/UpgradeModal";
 import ChatModal from "@/components/ChatModal";
 import AdminPanel from "@/components/AdminPanel";
+import WheelModal from "@/components/WheelModal";
 import { Button } from "@/components/ui/button";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
@@ -16,6 +17,7 @@ export default function Game() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showWheelModal, setShowWheelModal] = useState(false);
   const { toast } = useToast();
 
   // Fetch user data
@@ -160,6 +162,16 @@ export default function Game() {
       {/* Right Side Action Buttons */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 space-y-3 z-20">
         <Button
+          onClick={() => setShowWheelModal(true)}
+          className="w-14 h-14 rounded-full bg-pink-500/90 hover:bg-pink-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
+        >
+          <div className="text-center">
+            <div className="text-lg">🎯</div>
+            <div className="text-xs">Wheel</div>
+          </div>
+        </Button>
+        
+        <Button
           onClick={() => setShowAdminPanel(true)}
           className="w-14 h-14 rounded-full bg-purple-500/90 hover:bg-purple-600 text-white shadow-lg backdrop-blur-sm flex items-center justify-center"
         >
@@ -233,6 +245,12 @@ export default function Game() {
       <AdminPanel
         isOpen={showAdminPanel}
         onClose={() => setShowAdminPanel(false)}
+        userId={MOCK_USER_ID}
+      />
+
+      <WheelModal
+        isOpen={showWheelModal}
+        onClose={() => setShowWheelModal(false)}
         userId={MOCK_USER_ID}
       />
     </div>
