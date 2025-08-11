@@ -8,6 +8,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import ChatModal from "@/components/ChatModal";
 import AdminPanel from "@/components/AdminPanel";
 import WheelModal from "@/components/WheelModal";
+import AchievementsModal from "@/components/AchievementsModal";
 import { Button } from "@/components/ui/button";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
@@ -18,6 +19,7 @@ export default function Game() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
+  const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const { toast } = useToast();
 
   // Fetch user data
@@ -202,11 +204,11 @@ export default function Game() {
           </Button>
 
           <Button
-            onClick={() => toast({ title: "Tasks", description: "Coming soon!" })}
+            onClick={() => setShowAchievementsModal(true)}
             className="flex flex-col items-center space-y-1 bg-transparent hover:bg-white/10 text-white p-3 rounded-lg"
           >
-            <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-sm">📋</div>
-            <span className="text-xs">Task</span>
+            <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-sm">🏆</div>
+            <span className="text-xs">Progress</span>
           </Button>
 
           <Button
@@ -252,6 +254,12 @@ export default function Game() {
       <WheelModal
         isOpen={showWheelModal}
         onClose={() => setShowWheelModal(false)}
+        userId={MOCK_USER_ID}
+      />
+
+      <AchievementsModal
+        isOpen={showAchievementsModal}
+        onClose={() => setShowAchievementsModal(false)}
         userId={MOCK_USER_ID}
       />
     </div>
