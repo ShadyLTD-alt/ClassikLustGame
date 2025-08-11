@@ -25,15 +25,34 @@ export const characters = pgTable("characters", {
   interests: text("interests").default(""),
   quirks: text("quirks").default(""),
   imageUrl: text("imageUrl").default(""),
+  avatarUrl: text("avatarUrl").default(""),
   isUnlocked: boolean("isUnlocked").notNull().default(false),
   requiredLevel: integer("requiredLevel").notNull().default(1),
   personality: text("personality").notNull().default("friendly"),
   chatStyle: text("chatStyle").notNull().default("casual"),
+  personalityStyle: text("personalityStyle").notNull().default("Sweet & Caring"),
+  moodDistribution: jsonb("moodDistribution").default({
+    normal: 70,
+    happy: 20,
+    flirty: 10,
+    playful: 0,
+    mysterious: 0,
+    shy: 0
+  }),
+  responseTimeMin: integer("responseTimeMin").notNull().default(1),
+  responseTimeMax: integer("responseTimeMax").notNull().default(3),
+  randomPictureSending: boolean("randomPictureSending").notNull().default(false),
+  pictureSendChance: integer("pictureSendChance").notNull().default(5),
+  customTriggerWords: jsonb("customTriggerWords").default([]),
+  customGreetings: jsonb("customGreetings").default([]),
+  customResponses: jsonb("customResponses").default([]),
+  likes: text("likes").default(""),
+  dislikes: text("dislikes").default(""),
   isNsfw: boolean("isNsfw").notNull().default(false),
   isVip: boolean("isVip").notNull().default(false),
   isEvent: boolean("isEvent").notNull().default(false),
   isWheelReward: boolean("isWheelReward").notNull().default(false),
-  userId: varchar("userId").notNull()
+  userId: varchar("userId")
 });
 
 export const upgrades = pgTable("upgrades", {
@@ -59,7 +78,31 @@ export const gameStats = pgTable("gameStats", {
   pointsPerSecond: integer("pointsPerSecond").notNull().default(0),
   currentEnergy: integer("currentEnergy").notNull().default(4500),
   maxEnergy: integer("maxEnergy").notNull().default(4500),
-  dailySpinUsed: timestamp("dailySpinUsed")
+  lastWheelSpin: timestamp("lastWheelSpin"),
+  wheelSpinsRemaining: integer("wheelSpinsRemaining").notNull().default(1),
+  selectedCharacterId: varchar("selectedCharacterId")
+});
+
+export const wheelRewards = pgTable("wheelRewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // 'coins', 'gems', 'character', 'energy'
+  amount: integer("amount").default(0),
+  rarity: text("rarity").notNull().default("common"), // 'common', 'rare', 'epic', 'legendary'
+  label: text("label").notNull(),
+  weight: integer("weight").notNull().default(100), // Higher = more likely
+  characterId: varchar("characterId"), // For character unlocks
+  isActive: boolean("isActive").notNull().default(true)
+});
+
+export const userCharacters = pgTable("userCharacters", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("userId").notNull(),
+  characterId: varchar("characterId").notNull(),
+  isUnlocked: boolean("isUnlocked").notNull().default(false),
+  unlockedAt: timestamp("unlockedAt"),
+  level: integer("level").notNull().default(1),
+  experience: integer("experience").notNull().default(0),
+  isSelected: boolean("isSelected").notNull().default(false)
 });
 
 export const chatMessages = pgTable("chatMessages", {
@@ -117,6 +160,15 @@ export const insertGameStatsSchema = createInsertSchema(gameStats).omit({
   id: true
 });
 
+export const insertWheelRewardSchema = createInsertSchema(wheelRewards).omit({
+  id: true
+});
+
+export const insertUserCharacterSchema = createInsertSchema(userCharacters).omit({
+  id: true,
+  unlockedAt: true
+});
+
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
   id: true,
   createdAt: true
@@ -153,3 +205,9 @@ export type InsertGameSettings = z.infer<typeof insertGameSettingsSchema>;
 
 export type MediaFile = typeof mediaFiles.$inferSelect;
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+
+export type WheelReward = typeof wheelRewards.$inferSelect;
+export type InsertWheelReward = z.infer<typeof insertWheelRewardSchema>;
+
+export type UserCharacter = typeof userCharacters.$inferSelect;
+export type InsertUserCharacter = z.infer<typeof insertUserCharacterSchema>;

@@ -11,7 +11,9 @@ import {
   type InsertChatMessage,
   type GameSettings,
   type InsertGameSettings,
-  type MediaFile
+  type MediaFile,
+  type WheelReward,
+  type UserCharacter
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -133,10 +135,29 @@ export class MemStorage implements IStorage {
         interests: "Fitness, anime, gaming, outdoor activities",
         quirks: "Always flexes when excited, has a competitive streak in everything",
         imageUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754900337225.jpg",
+        avatarUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754904198450.jpg",
         isUnlocked: true,
         requiredLevel: 1,
         personality: "playful",
         chatStyle: "energetic",
+        personalityStyle: "Sweet & Caring",
+        moodDistribution: {
+          normal: 70,
+          happy: 20,
+          flirty: 10,
+          playful: 0,
+          mysterious: 0,
+          shy: 0
+        },
+        responseTimeMin: 1,
+        responseTimeMax: 3,
+        randomPictureSending: true,
+        pictureSendChance: 5,
+        customTriggerWords: [],
+        customGreetings: ["Hello darling! 💪", "Hi there sweetie! 😊", "Hey gorgeous! 😘"],
+        customResponses: ["That's so sweet! 💕", "I love talking with you! ❤️", "You're amazing! ⭐"],
+        likes: "compliments, romance, movies, music, art",
+        dislikes: "rudeness, negativity, boring topics",
         isNsfw: false,
         isVip: false,
         isEvent: false,
@@ -151,10 +172,29 @@ export class MemStorage implements IStorage {
         interests: "Art, reading, stargazing, quiet cafes",
         quirks: "Always notices small details, has a soft spot for cute things",
         imageUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927~2_1754900501584.jpg",
+        avatarUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754900337225.jpg",
         isUnlocked: false,
         requiredLevel: 5,
         personality: "shy",
         chatStyle: "formal",
+        personalityStyle: "Mysterious",
+        moodDistribution: {
+          normal: 50,
+          happy: 15,
+          flirty: 5,
+          playful: 10,
+          mysterious: 20,
+          shy: 0
+        },
+        responseTimeMin: 2,
+        responseTimeMax: 5,
+        randomPictureSending: false,
+        pictureSendChance: 3,
+        customTriggerWords: [],
+        customGreetings: ["Good evening...", "Hello there...", "How are you?"],
+        customResponses: ["Interesting...", "I see...", "That's thoughtful of you."],
+        likes: "art, poetry, quiet moments, deep thoughts",
+        dislikes: "loud noises, chaos, rushing",
         isNsfw: false,
         isVip: true,
         isEvent: false,
@@ -190,7 +230,13 @@ export class MemStorage implements IStorage {
       userId: mockUser.id,
       totalTaps: 1247,
       totalEarned: 45200,
-      dailySpinUsed: null
+      totalPoints: 2140,
+      pointsPerSecond: 279,
+      currentEnergy: 4500,
+      maxEnergy: 4500,
+      lastWheelSpin: null,
+      wheelSpinsRemaining: 1,
+      selectedCharacterId: "char-yuki"
     };
     this.gameStats.set(mockUser.id, mockStats);
 
@@ -230,7 +276,13 @@ export class MemStorage implements IStorage {
       userId: id,
       totalTaps: 0,
       totalEarned: 0,
-      dailySpinUsed: null
+      totalPoints: 0,
+      pointsPerSecond: 0,
+      currentEnergy: 4500,
+      maxEnergy: 4500,
+      lastWheelSpin: null,
+      wheelSpinsRemaining: 1,
+      selectedCharacterId: null
     };
     this.gameStats.set(id, stats);
 
@@ -278,6 +330,18 @@ export class MemStorage implements IStorage {
       interests: character.interests || "",
       quirks: character.quirks || "",
       imageUrl: character.imageUrl || "",
+      avatarUrl: character.avatarUrl || null,
+      personalityStyle: character.personalityStyle || "Sweet & Caring",
+      moodDistribution: character.moodDistribution || { normal: 70, happy: 20, flirty: 10, playful: 0, mysterious: 0, shy: 0 },
+      responseTimeMin: character.responseTimeMin || 1,
+      responseTimeMax: character.responseTimeMax || 3,
+      randomPictureSending: character.randomPictureSending || false,
+      pictureSendChance: character.pictureSendChance || 5,
+      customTriggerWords: character.customTriggerWords || [],
+      customGreetings: character.customGreetings || [],
+      customResponses: character.customResponses || [],
+      likes: character.likes || "",
+      dislikes: character.dislikes || "",
       isUnlocked: character.isUnlocked ?? false,
       requiredLevel: character.requiredLevel ?? 1,
       personality: character.personality || "friendly",
@@ -286,7 +350,7 @@ export class MemStorage implements IStorage {
       isVip: character.isVip ?? false,
       isEvent: character.isEvent ?? false,
       isWheelReward: character.isWheelReward ?? false,
-      userId: character.userId || ""
+      userId: character.userId || null
     };
     this.characters.set(id, newCharacter);
     return newCharacter;
@@ -312,7 +376,7 @@ export class MemStorage implements IStorage {
     // Clear related media assignments
     for (const [mediaId, media] of this.mediaFiles.entries()) {
       if (media.characterId === id) {
-        this.mediaFiles.set(mediaId, { ...media, characterId: undefined });
+        this.mediaFiles.set(mediaId, { ...media, characterId: null });
       }
     }
   }
@@ -368,7 +432,9 @@ export class MemStorage implements IStorage {
         pointsPerSecond: 0,
         currentEnergy: 4500,
         maxEnergy: 4500,
-        dailySpinUsed: null
+        lastWheelSpin: null,
+        wheelSpinsRemaining: 1,
+        selectedCharacterId: null
       };
       this.gameStats.set(userId, defaultStats);
       return defaultStats;
@@ -395,6 +461,7 @@ export class MemStorage implements IStorage {
     const chatMessage: ChatMessage = {
       ...message,
       id,
+      characterId: message.characterId || null,
       createdAt: new Date()
     };
 
@@ -422,9 +489,9 @@ export class MemStorage implements IStorage {
   async recordWheelSpin(userId: string, reward: string): Promise<void> {
     this.wheelSpins.set(userId, new Date());
 
-    // Update daily spin in stats
+    // Update wheel spin in stats
     const stats = await this.getUserStats(userId);
-    await this.updateUserStats(userId, { dailySpinUsed: new Date() });
+    await this.updateUserStats(userId, { lastWheelSpin: new Date(), wheelSpinsRemaining: Math.max(0, (stats.wheelSpinsRemaining || 1) - 1) });
   }
 
   async getGameSettings(): Promise<GameSettings> {
