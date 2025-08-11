@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import CharacterCreation from "@/components/CharacterCreation";
+import ImageManager from "@/components/ImageManager";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
 
@@ -220,122 +222,16 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
       {/* Sub-modals */}
       <Dialog open={showCharacterCreation} onOpenChange={setShowCharacterCreation}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">
               🎭 Create New Character
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Character Name
-                  </label>
-                  <Input
-                    placeholder="Enter character name"
-                    className="bg-black/30 border-white/20 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Description
-                  </label>
-                  <Textarea
-                    placeholder="Character description and background..."
-                    className="bg-black/30 border-white/20 text-white min-h-[100px]"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Personality
-                  </label>
-                  <Textarea
-                    placeholder="Character personality traits..."
-                    className="bg-black/30 border-white/20 text-white min-h-[80px]"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Rarity
-                  </label>
-                  <Select>
-                    <SelectTrigger className="bg-black/30 border-white/20 text-white">
-                      <SelectValue placeholder="Select rarity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="common">Common</SelectItem>
-                      <SelectItem value="rare">Rare</SelectItem>
-                      <SelectItem value="epic">Epic</SelectItem>
-                      <SelectItem value="legendary">Legendary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Unlock Level
-                  </label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    defaultValue="1"
-                    className="bg-black/30 border-white/20 text-white"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Chat Style
-                  </label>
-                  <Select>
-                    <SelectTrigger className="bg-black/30 border-white/20 text-white">
-                      <SelectValue placeholder="Select chat style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="flirty">Flirty</SelectItem>
-                      <SelectItem value="mysterious">Mysterious</SelectItem>
-                      <SelectItem value="energetic">Energetic</SelectItem>
-                      <SelectItem value="calm">Calm</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Character Image
-                  </label>
-                  <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center">
-                    <div className="text-gray-400 mb-2">Drop image here or click to upload</div>
-                    <Button variant="outline" className="border-white/20 text-white">
-                      Choose File
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-600">
-              <Button
-                variant="outline"
-                onClick={() => setShowCharacterCreation(false)}
-                className="border-gray-600 text-white"
-              >
-                Cancel
-              </Button>
-              <Button className="bg-pink-600 hover:bg-pink-700">
-                Create Character
-              </Button>
-            </div>
-          </div>
+          <CharacterCreation 
+            isOpen={showCharacterCreation} 
+            onClose={() => setShowCharacterCreation(false)} 
+          />
         </DialogContent>
       </Dialog>
       
@@ -346,50 +242,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               📷 Image Manager
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white">Media Library</h3>
-              <div className="flex space-x-2">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Upload Images
-                </Button>
-                <Button variant="outline" className="border-white/20 text-white">
-                  Bulk Actions
-                </Button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {mediaFiles.map((media) => (
-                <Card key={media.id} className="admin-card">
-                  <CardContent className="p-2">
-                    <div className="aspect-square bg-gray-700 rounded mb-2 flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">Preview</span>
-                    </div>
-                    <div className="text-xs text-white truncate">{media.filename}</div>
-                    <div className="text-xs text-gray-400">{media.category || 'Uncategorized'}</div>
-                    <div className="flex justify-between mt-2">
-                      <Button size="sm" variant="outline" className="text-xs">
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" className="text-xs">
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {mediaFiles.length === 0 && (
-                <div className="col-span-full text-center py-12">
-                  <div className="text-gray-400">No media files found</div>
-                  <Button className="mt-4 bg-green-600 hover:bg-green-700">
-                    Upload Your First Image
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageManager 
+            isOpen={showImageManager} 
+            onClose={() => setShowImageManager(false)} 
+          />
         </DialogContent>
       </Dialog>
       

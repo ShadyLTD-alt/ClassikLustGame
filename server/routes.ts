@@ -423,54 +423,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const uploadedFiles = [];
       
       for (const file of files) {
-        // Process image with Sharp if options provided
-        let processedPath = file.path;
-        if (processOptions) {
-          const options = JSON.parse(processOptions);
-          const processedFilename = 'processed-' + file.filename;
-          processedPath = path.join(uploadDir, processedFilename);
-          
-          let sharpProcessor = sharp(file.path);
-          
-          // Apply cropping if specified
-          if (options.crop) {
-            sharpProcessor = sharpProcessor.extract({
-              left: options.crop.x,
-              top: options.crop.y,
-              width: options.crop.width,
-              height: options.crop.height
-            });
+        try {
+          // Process image with Sharp if options provided
+          let processedPath = file.path;
+          if (processOptions) {
+            try {
+              const options = JSON.parse(processOptions);
+              const processedFilename = 'processed-' + file.filename;
+              processedPath = path.join(uploadDir, processedFilename);
+              
+              let sharpProcessor = sharp(file.path);
+              
+              // Apply cropping if specified
+              if (options.crop) {
+                sharpProcessor = sharpProcessor.extract({
+                  left: options.crop.x,
+                  top: options.crop.y,
+                  width: options.crop.width,
+                  height: options.crop.height
+                });
+              }
+              
+              // Apply resizing if specified
+              if (options.resize) {
+                sharpProcessor = sharpProcessor.resize(options.resize.width, options.resize.height);
+              }
+              
+              // Apply format conversion
+              if (options.format) {
+                sharpProcessor = sharpProcessor.toFormat(options.format);
+              }
+              
+              await sharpProcessor.toFile(processedPath);
+              
+              // Delete original file
+              await fs.unlink(file.path);
+            } catch (processError) {
+              console.warn('Image processing failed, using original:', processError);
+              processedPath = file.path;
+            }
           }
           
-          // Apply resizing if specified
-          if (options.resize) {
-            sharpProcessor = sharpProcessor.resize(options.resize.width, options.resize.height);
-          }
+          // Save to database
+          const mediaFile = {
+            filename: path.basename(processedPath),
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: (await fs.stat(processedPath)).size,
+            path: `/uploads/${path.basename(processedPath)}`,
+            characterId: characterId || null,
+            uploadedBy: userId || 'anonymous'
+          };
           
-          // Apply format conversion
-          if (options.format) {
-            sharpProcessor = sharpProcessor.toFormat(options.format);
-          }
-          
-          await sharpProcessor.toFile(processedPath);
-          
-          // Delete original file
-          await fs.unlink(file.path);
+          const savedFile = await storage.saveMediaFile(mediaFile as any);
+          uploadedFiles.push(savedFile);
+        } catch (fileError) {
+          console.error('Error processing file:', file.originalname, fileError);
+          // Continue with next file instead of failing completely
         }
-        
-        // Save to database
-        const mediaFile = {
-          filename: path.basename(processedPath),
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: (await fs.stat(processedPath)).size,
-          path: `/uploads/${path.basename(processedPath)}`,
-          characterId: characterId || null,
-          uploadedBy: userId
-        };
-        
-        await storage.saveMediaFile(mediaFile as any);
-        uploadedFiles.push(mediaFile);
       }
       
       res.json({
@@ -479,7 +489,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: `${uploadedFiles.length} file(s) uploaded successfully`
       });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error('Upload error:', error);
+      res.status(500).json({ error: error.message || 'Upload failed' });
     }
   });
 

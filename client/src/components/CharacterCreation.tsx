@@ -134,8 +134,8 @@ export default function CharacterCreation({ isOpen, onClose }: CharacterCreation
     const characterData = {
       ...data,
       moodDistribution,
-      customGreetings,
       customResponses,
+      customGreetings,
       customTriggerWords,
     };
     createCharacterMutation.mutate(characterData);
