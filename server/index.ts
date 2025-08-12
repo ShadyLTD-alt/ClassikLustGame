@@ -3,9 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initDB } from './storage';
 import { startEnergyRegen } from './safe-energy';
-import { SQLiteStorage } from './SQLiteStorage';
-
-const storage = new SQLiteStorage();
+import { storage } from './storage';
 
 function main() {
   initDB(); // instant connection

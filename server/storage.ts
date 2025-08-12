@@ -73,11 +73,11 @@ export interface IStorage {
   deleteMediaFile(id: string): Promise<void>;
 }
 
-// Import PostgreSQL implementation
-import { PostgreSQLStorage } from './PostgreSQLStorage';
+// Import Memory implementation
+import { MemStorage } from './MemStorage';
 
 // Create and export storage instance
-export const storage = new PostgreSQLStorage();
+export const storage = new MemStorage();
 
 // For backward compatibility, also export DB initialization
 let dbInitialized = false;
