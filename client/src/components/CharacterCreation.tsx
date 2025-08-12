@@ -389,14 +389,14 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Avatar Image</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select avatar" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="none">Select avatar</SelectItem>
+                              <SelectItem value="">No avatar selected</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
                                   {file.originalName || file.filename} - {file.fileType || 'image'}

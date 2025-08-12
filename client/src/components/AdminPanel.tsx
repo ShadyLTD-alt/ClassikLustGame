@@ -410,6 +410,20 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showAIFunctions} onOpenChange={setShowAIFunctions}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white">
+              🧠 AI Custom Functions for {characters.find(char => char.id === selectedCharacterForAI)?.name || 'Selected Character'}
+            </DialogTitle>
+            <DialogDescription>
+              Configure and manage custom AI functions for your characters.
+            </DialogDescription>
+          </DialogHeader>
+          <AICustomFunctions characterId={selectedCharacterForAI} onClose={() => setShowAIFunctions(false)} />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

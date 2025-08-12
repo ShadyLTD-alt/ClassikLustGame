@@ -533,3 +533,490 @@ export default function AICustomFunctions({ isOpen, onClose, characterId }: AICu
     </Dialog>
   );
 }
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Trash2, Save, Bot, MessageSquare, Brain, Zap, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+interface AICustomFunctionsProps {
+  characterId: string;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface CustomPrompt {
+  id: string;
+  name: string;
+  prompt: string;
+  category: string;
+  isActive: boolean;
+}
+
+interface ResponsePattern {
+  id: string;
+  trigger: string;
+  response: string;
+  mood: string;
+  priority: number;
+}
+
+interface AISettings {
+  creativity: number;
+  formality: number;
+  responseLength: 'short' | 'medium' | 'long';
+  memoryDepth: number;
+  personalityConsistency: number;
+  emotionalRange: number;
+  contextAwareness: number;
+}
+
+export default function AICustomFunctions({ characterId, isOpen, onClose }: AICustomFunctionsProps) {
+  const [activeTab, setActiveTab] = useState("prompts");
+  const [newPrompt, setNewPrompt] = useState({ name: "", prompt: "", category: "general" });
+  const [newPattern, setNewPattern] = useState({ trigger: "", response: "", mood: "neutral", priority: 1 });
+  const [aiSettings, setAISettings] = useState<AISettings>({
+    creativity: 75,
+    formality: 25,
+    responseLength: 'medium',
+    memoryDepth: 50,
+    personalityConsistency: 80,
+    emotionalRange: 60,
+    contextAwareness: 70
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch character AI data
+  const { data: character } = useQuery({
+    queryKey: ['/api/characters', characterId],
+    enabled: !!characterId,
+  });
+
+  const { data: customPrompts = [] } = useQuery({
+    queryKey: ['/api/ai/prompts', characterId],
+    queryFn: () => apiRequest('GET', `/api/ai/prompts/${characterId}`),
+    enabled: !!characterId,
+  });
+
+  const { data: responsePatterns = [] } = useQuery({
+    queryKey: ['/api/ai/patterns', characterId],
+    queryFn: () => apiRequest('GET', `/api/ai/patterns/${characterId}`),
+    enabled: !!characterId,
+  });
+
+  // Mutations
+  const savePromptMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', `/api/ai/prompts/${characterId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/prompts', characterId] });
+      toast({ title: "Success", description: "Custom prompt saved!" });
+      setNewPrompt({ name: "", prompt: "", category: "general" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save prompt", variant: "destructive" });
+    }
+  });
+
+  const savePatternMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', `/api/ai/patterns/${characterId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/patterns', characterId] });
+      toast({ title: "Success", description: "Response pattern saved!" });
+      setNewPattern({ trigger: "", response: "", mood: "neutral", priority: 1 });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save pattern", variant: "destructive" });
+    }
+  });
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', `/api/ai/settings/${characterId}`, data),
+    onSuccess: () => {
+      toast({ title: "Success", description: "AI settings updated!" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update settings", variant: "destructive" });
+    }
+  });
+
+  const deletePromptMutation = useMutation({
+    mutationFn: (promptId: string) => apiRequest('DELETE', `/api/ai/prompts/${characterId}/${promptId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/prompts', characterId] });
+      toast({ title: "Success", description: "Prompt deleted!" });
+    }
+  });
+
+  const deletePatternMutation = useMutation({
+    mutationFn: (patternId: string) => apiRequest('DELETE', `/api/ai/patterns/${characterId}/${patternId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai/patterns', characterId] });
+      toast({ title: "Success", description: "Pattern deleted!" });
+    }
+  });
+
+  const handleSavePrompt = () => {
+    if (!newPrompt.name.trim() || !newPrompt.prompt.trim()) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    savePromptMutation.mutate(newPrompt);
+  };
+
+  const handleSavePattern = () => {
+    if (!newPattern.trigger.trim() || !newPattern.response.trim()) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    savePatternMutation.mutate(newPattern);
+  };
+
+  const handleSaveSettings = () => {
+    saveSettingsMutation.mutate(aiSettings);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="w-5 h-5" />
+            AI Custom Functions - {character?.name}
+          </DialogTitle>
+          <DialogDescription>
+            Configure advanced AI behavior, custom prompts, and response patterns for enhanced character interactions.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="prompts">Custom Prompts</TabsTrigger>
+            <TabsTrigger value="patterns">Response Patterns</TabsTrigger>
+            <TabsTrigger value="settings">AI Settings</TabsTrigger>
+            <TabsTrigger value="testing">AI Testing</TabsTrigger>
+          </TabsList>
+
+          {/* Custom Prompts Tab */}
+          <TabsContent value="prompts" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  Custom AI Prompts
+                </CardTitle>
+                <CardDescription>
+                  Create specialized prompts for different conversation scenarios
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="promptName">Prompt Name</Label>
+                    <Input
+                      id="promptName"
+                      placeholder="e.g., Romantic Mode"
+                      value={newPrompt.name}
+                      onChange={(e) => setNewPrompt({ ...newPrompt, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="promptCategory">Category</Label>
+                    <Select value={newPrompt.category} onValueChange={(v) => setNewPrompt({ ...newPrompt, category: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="romantic">Romantic</SelectItem>
+                        <SelectItem value="flirty">Flirty</SelectItem>
+                        <SelectItem value="supportive">Supportive</SelectItem>
+                        <SelectItem value="playful">Playful</SelectItem>
+                        <SelectItem value="mysterious">Mysterious</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={handleSavePrompt} className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Prompt
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="promptText">Prompt Content</Label>
+                  <Textarea
+                    id="promptText"
+                    placeholder="Enter your custom AI prompt here..."
+                    rows={4}
+                    value={newPrompt.prompt}
+                    onChange={(e) => setNewPrompt({ ...newPrompt, prompt: e.target.value })}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Existing Prompts</h4>
+                  {customPrompts.map((prompt: CustomPrompt) => (
+                    <Card key={prompt.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h5 className="font-medium">{prompt.name}</h5>
+                            <Badge variant="outline">{prompt.category}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{prompt.prompt}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deletePromptMutation.mutate(prompt.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Response Patterns Tab */}
+          <TabsContent value="patterns" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Response Patterns
+                </CardTitle>
+                <CardDescription>
+                  Define specific triggers and responses for contextual conversations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-12 gap-2">
+                  <Input
+                    placeholder="Trigger phrase..."
+                    value={newPattern.trigger}
+                    onChange={(e) => setNewPattern({ ...newPattern, trigger: e.target.value })}
+                    className="col-span-3"
+                  />
+                  <Input
+                    placeholder="Response..."
+                    value={newPattern.response}
+                    onChange={(e) => setNewPattern({ ...newPattern, response: e.target.value })}
+                    className="col-span-5"
+                  />
+                  <Select value={newPattern.mood} onValueChange={(v) => setNewPattern({ ...newPattern, mood: v })}>
+                    <SelectTrigger className="col-span-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="neutral">Neutral</SelectItem>
+                      <SelectItem value="happy">Happy</SelectItem>
+                      <SelectItem value="flirty">Flirty</SelectItem>
+                      <SelectItem value="shy">Shy</SelectItem>
+                      <SelectItem value="excited">Excited</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="Priority"
+                    value={newPattern.priority}
+                    onChange={(e) => setNewPattern({ ...newPattern, priority: parseInt(e.target.value) || 1 })}
+                    className="col-span-1"
+                  />
+                  <Button onClick={handleSavePattern} className="col-span-1">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  {responsePatterns.map((pattern: ResponsePattern) => (
+                    <div key={pattern.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{pattern.trigger}</Badge>
+                          <span className="text-sm">→</span>
+                          <span className="text-sm">{pattern.response}</span>
+                          <Badge variant="secondary">{pattern.mood}</Badge>
+                          <Badge variant="outline">Priority: {pattern.priority}</Badge>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deletePatternMutation.mutate(pattern.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* AI Settings Tab */}
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  AI Behavior Settings
+                </CardTitle>
+                <CardDescription>
+                  Fine-tune the AI's personality and response characteristics
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Creativity: {aiSettings.creativity}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.creativity}
+                        onChange={(e) => setAISettings({ ...aiSettings, creativity: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label>Formality: {aiSettings.formality}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.formality}
+                        onChange={(e) => setAISettings({ ...aiSettings, formality: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label>Memory Depth: {aiSettings.memoryDepth}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.memoryDepth}
+                        onChange={(e) => setAISettings({ ...aiSettings, memoryDepth: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Personality Consistency: {aiSettings.personalityConsistency}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.personalityConsistency}
+                        onChange={(e) => setAISettings({ ...aiSettings, personalityConsistency: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label>Emotional Range: {aiSettings.emotionalRange}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.emotionalRange}
+                        onChange={(e) => setAISettings({ ...aiSettings, emotionalRange: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label>Context Awareness: {aiSettings.contextAwareness}%</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={aiSettings.contextAwareness}
+                        onChange={(e) => setAISettings({ ...aiSettings, contextAwareness: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Response Length</Label>
+                  <Select value={aiSettings.responseLength} onValueChange={(v: any) => setAISettings({ ...aiSettings, responseLength: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="short">Short (1-2 sentences)</SelectItem>
+                      <SelectItem value="medium">Medium (2-4 sentences)</SelectItem>
+                      <SelectItem value="long">Long (4+ sentences)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button onClick={handleSaveSettings} className="w-full">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save AI Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* AI Testing Tab */}
+          <TabsContent value="testing" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  AI Response Testing
+                </CardTitle>
+                <CardDescription>
+                  Test your AI configurations with sample inputs
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Current Configuration:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge>Creativity: {aiSettings.creativity}%</Badge>
+                    <Badge>Formality: {aiSettings.formality}%</Badge>
+                    <Badge>Response: {aiSettings.responseLength}</Badge>
+                    <Badge>Prompts: {customPrompts.length}</Badge>
+                    <Badge>Patterns: {responsePatterns.length}</Badge>
+                  </div>
+                </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>AI Testing interface will be available in the next update.</p>
+                  <p className="text-sm">Test your configurations in the actual chat to see results.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
