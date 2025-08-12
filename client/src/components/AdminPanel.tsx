@@ -687,9 +687,17 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Media Tab - Image Manager */}
             <TabsContent value="media" className="space-y-6">
-              <div className="w-full h-full">
-                <ImageManager isOpen={true} onClose={() => {}} />
-              </div>
+              <Card className="bg-slate-800/50 border-slate-600">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Image className="w-5 h-5" />
+                    Image Management System
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="min-h-[600px]">
+                  <ImageManager isOpen={true} onClose={() => {}} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* AI Chat Tab */}
@@ -774,28 +782,120 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   <Separator className="bg-slate-600" />
                   <div>
                     <h4 className="font-semibold text-white mb-3">Feature Toggles</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                         <div>
-                          <Label className="text-white">NSFW Content</Label>
+                          <Label className="text-white font-medium">NSFW Content</Label>
                           <p className="text-sm text-slate-400">Allow adult content in the game</p>
                         </div>
                         <Switch />
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                         <div>
-                          <Label className="text-white">Chat Random Responses</Label>
+                          <Label className="text-white font-medium">Chat Random Responses</Label>
                           <p className="text-sm text-slate-400">Enable random AI-generated messages</p>
                         </div>
                         <Switch defaultChecked />
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                         <div>
-                          <Label className="text-white">Wheel Game</Label>
+                          <Label className="text-white font-medium">Wheel Game</Label>
                           <p className="text-sm text-slate-400">Enable fortune wheel feature</p>
                         </div>
                         <Switch defaultChecked />
                       </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                        <div>
+                          <Label className="text-white font-medium">VIP System</Label>
+                          <p className="text-sm text-slate-400">Enable VIP character access and features</p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                        <div>
+                          <Label className="text-white font-medium">Event Characters</Label>
+                          <p className="text-sm text-slate-400">Enable special event character system</p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                        <div>
+                          <Label className="text-white font-medium">Auto Picture Sending</Label>
+                          <p className="text-sm text-slate-400">Allow characters to send pictures automatically</p>
+                        </div>
+                        <Switch />
+                      </div>
+                    </div>
+                  </div>
+                  <Separator className="bg-slate-600" />
+                  <div>
+                    <h4 className="font-semibold text-white mb-3">Advanced Settings</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-white">Chat Response Delay (ms)</Label>
+                        <Input 
+                          type="number"
+                          defaultValue="2000"
+                          className="bg-slate-700 border-slate-600 text-white"
+                          placeholder="Response delay in milliseconds"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white">Picture Send Chance (%)</Label>
+                        <Input 
+                          type="number"
+                          defaultValue="5"
+                          min="0"
+                          max="100"
+                          className="bg-slate-700 border-slate-600 text-white"
+                          placeholder="Chance to send pictures"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white">Points Per Tap</Label>
+                        <Input 
+                          type="number"
+                          defaultValue="125"
+                          className="bg-slate-700 border-slate-600 text-white"
+                          placeholder="Points awarded per tap"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white">Level Up Requirement</Label>
+                        <Input 
+                          type="number"
+                          defaultValue="1000"
+                          className="bg-slate-700 border-slate-600 text-white"
+                          placeholder="Points needed to level up"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <Separator className="bg-slate-600" />
+                  <div>
+                    <h4 className="font-semibold text-white mb-3">Database Management</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Button 
+                        variant="outline" 
+                        className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
+                      >
+                        <Database className="w-4 h-4 mr-2" />
+                        Backup Data
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="text-green-400 border-green-400 hover:bg-green-400/10"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Reset Energy
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="text-yellow-400 border-yellow-400 hover:bg-yellow-400/10"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Reset Levels
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
