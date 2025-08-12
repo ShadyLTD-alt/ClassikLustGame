@@ -370,10 +370,10 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="unassigned">No specific character</SelectItem>
+                              <SelectItem value="">No Image Selected</SelectItem>
                               {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id || file.filename} value={file.path || `/uploads/${file.filename}`}>
-                                  {file.originalName || file.filename}
+                                <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
+                                  {file.originalName || file.filename} - {file.fileType || 'image'}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -396,10 +396,10 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="unassigned">Any Character</SelectItem>
+                              <SelectItem value="">No Image Selected</SelectItem>
                               {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id || file.filename} value={file.path || `/uploads/${file.filename}`}>
-                                  {file.originalName || file.filename}
+                                <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
+                                  {file.originalName || file.filename} - {file.fileType || 'image'}
                                 </SelectItem>
                               ))}
                             </SelectContent>

@@ -13,7 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import CharacterCreation from "@/components/CharacterCreation";
 import ImageManager from "@/components/ImageManager";
-import { Edit, Trash2 } from "lucide-react";
+import AICustomFunctions from "@/components/AICustomFunctions";
+import { Edit, Trash2, Bot, Brain } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
 
@@ -35,6 +36,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   const [editingCharacter, setEditingCharacter] = useState<any>(null);
   const [showImageManager, setShowImageManager] = useState(false);
   const [showWheelGame, setShowWheelGame] = useState(false);
+  const [showAIFunctions, setShowAIFunctions] = useState(false);
+  const [selectedCharacterForAI, setSelectedCharacterForAI] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -171,13 +174,27 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                               variant="outline"
                               onClick={() => handleEditCharacter(character)}
                               className="border-gray-600 text-white hover:bg-white/10"
+                              title="Edit Character"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedCharacterForAI(character.id);
+                                setShowAIFunctions(true);
+                              }}
+                              className="border-blue-600 text-blue-400 hover:bg-blue-600/20"
+                              title="AI Custom Functions"
+                            >
+                              <Bot className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteCharacter(character.id)}
+                              title="Delete Character"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
