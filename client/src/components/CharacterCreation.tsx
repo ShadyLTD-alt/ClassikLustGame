@@ -409,6 +409,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                         </FormItem>
                       )}
                     />
+                  </div>
 
                   {/* Mood */}
                   <FormField
