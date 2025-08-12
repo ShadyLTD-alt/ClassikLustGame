@@ -776,8 +776,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                 </div>
               </TabsContent>
             </Tabs>
+              </div>
             </div>
-          </div>
         </DialogContent>
       </Dialog>
 
