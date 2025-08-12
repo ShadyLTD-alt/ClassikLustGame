@@ -61,6 +61,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize or get default user
+  app.post("/api/user/init", async (req, res) => {
+    try {
+      const defaultUserId = "default-player";
+      
+      // Check if default user already exists
+      let user = await storage.getUser(defaultUserId);
+      
+      if (!user) {
+        // Create default user
+        user = await storage.createUser({
+          id: defaultUserId,
+          username: "Player",
+          password: "default", // In a real app, this would be properly hashed
+          level: 1,
+          points: 1000, // Give some starting points
+          energy: 4500,
+          maxEnergy: 4500,
+          hourlyRate: 0,
+          isAdmin: false,
+          nsfwEnabled: false,
+          lustGems: 50 // Give some starting gems
+        });
+        
+        console.log('Created default user:', user.id);
+        
+        // Create a default character for the new user
+        const defaultCharacter = await storage.createCharacter({
+          name: "Luna",
+          bio: "A mysterious and charming companion",
+          backstory: "Luna is an enigmatic character who loves to engage in conversations and help with your journey.",
+          interests: "Anime, Gaming, Art",
+          quirks: "Has a playful sense of humor",
+          description: "A beautiful anime-style character with long dark hair and sparkling eyes",
+          imageUrl: "/public/default-character.jpg",
+          avatarUrl: "/public/default-avatar.jpg",
+          personality: "friendly",
+          personalityStyle: "Sweet & Caring",
+          chatStyle: "casual",
+          likes: "Adventures, cute things, helping friends",
+          dislikes: "Rudeness, boredom",
+          requiredLevel: 1,
+          level: 1,
+          responseTimeMin: 1,
+          responseTimeMax: 3,
+          responseTimeMs: 2000,
+          pictureSendChance: 5,
+          isNsfw: false,
+          isVip: false,
+          isEvent: false,
+          isWheelReward: false,
+          randomPictureSending: false,
+          moodDistribution: {
+            normal: 70,
+            happy: 20,
+            flirty: 10,
+            playful: 0,
+            mysterious: 0,
+            shy: 0,
+          },
+          customTriggerWords: [],
+          customGreetings: ["Hello there! I'm Luna, nice to meet you!"],
+          customResponses: [],
+        });
+        
+        // Set the character as selected for the user
+        await storage.setSelectedCharacter(user.id, defaultCharacter.id);
+        console.log('Created default character and set as selected:', defaultCharacter.id);
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error('Error initializing user:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/user", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
