@@ -24,18 +24,16 @@ export default function ImageManager({ isOpen = true, onClose }: ImageManagerPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch media files
+  // Fetch media files - always enabled
   const { data: mediaFiles = [], isLoading } = useQuery({
     queryKey: ['/api/media'],
-    queryFn: () => fetch('/api/media').then(res => res.json()),
-    enabled: isOpen
+    queryFn: () => fetch('/api/media').then(res => res.json())
   });
 
-  // Fetch characters for assignment
+  // Fetch characters for assignment - always enabled
   const { data: characters = [] } = useQuery({
     queryKey: ['/api/admin/characters'],
-    queryFn: () => fetch('/api/admin/characters').then(res => res.json()),
-    enabled: isOpen
+    queryFn: () => fetch('/api/admin/characters').then(res => res.json())
   });
 
   // Upload mutation
@@ -135,8 +133,11 @@ export default function ImageManager({ isOpen = true, onClose }: ImageManagerPro
     }
   };
 
+  // Debug log to confirm component is rendering
+  console.log('ImageManager rendering, isOpen:', isOpen, 'mediaFiles:', mediaFiles.length);
+
   return (
-    <div className="w-full h-full space-y-6 p-4">
+    <div className="w-full min-h-[600px] space-y-6 p-4 bg-slate-900/50 rounded-lg border border-slate-600">
       {/* Upload Section */}
       <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
         <CardHeader>

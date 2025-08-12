@@ -78,6 +78,9 @@ interface WheelPrize {
 
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
+  
+  // Debug logging
+  console.log('AdminPanel rendering, isOpen:', isOpen, 'activeTab:', activeTab);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
@@ -687,9 +690,17 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Media Tab - Image Manager */}
             <TabsContent value="media" className="space-y-6">
-              <div className="min-h-[600px]">
-                <ImageManager isOpen={true} onClose={() => {}} />
-              </div>
+              <Card className="bg-slate-800/50 border-slate-600">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Image className="w-5 h-5" />
+                    Media Management System
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ImageManager isOpen={true} onClose={() => {}} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* AI Chat Tab */}
