@@ -1,5 +1,5 @@
 
-import fetch from 'node-fetch';
+// Use native fetch (available in Node.js 18+)
 
 interface MistralConfig {
   apiKey: string;
@@ -28,7 +28,7 @@ class MistralService {
     this.config = {
       apiKey: process.env.MISTRAL_API_KEY || '',
       model: 'mistral-small-latest',
-      debugModel: 'codestral-latest'
+      debugModel: 'mistral-small-latest'
     };
   }
 
@@ -103,13 +103,11 @@ Respond in character with a natural, engaging message. Keep it conversational an
   }
 
   private async callMistralAPI(prompt: string, model: string): Promise<string> {
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    try {
+      console.log('Making Mistral API call to:', 'https://api.mistral.ai/v1/chat/completions');
+      console.log('Using model:', model);
+      
+      const requestBody = {
         model: model,
         messages: [
           {
@@ -119,16 +117,32 @@ Respond in character with a natural, engaging message. Keep it conversational an
         ],
         max_tokens: 500,
         temperature: 0.7
-      })
-    });
+      };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Mistral API error: ${response.status} ${response.statusText} - ${errorText}`);
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Mistral API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Mistral API error response:', errorText);
+        throw new Error(`Mistral API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json() as any;
+      console.log('Mistral API response data:', data);
+      return data.choices[0]?.message?.content || 'No response generated.';
+    } catch (error) {
+      console.error('Mistral API call error:', error);
+      throw error;
     }
-
-    const data = await response.json() as any;
-    return data.choices[0]?.message?.content || 'No response generated.';
   }
 
   async testConnection(): Promise<{ success: boolean; message: string }> {
