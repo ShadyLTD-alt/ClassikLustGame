@@ -139,7 +139,7 @@ export default function Game() {
     mutationFn: async (coords?: { x: number; y: number }) => {
       const response = await apiRequest("POST", "/api/tap", { userId: MOCK_USER_ID });
       const data = await response.json();
-      
+
       // Trigger floating heart animation if coordinates provided
       if (coords) {
         setHeartTriggers(prev => [...prev, { 
@@ -147,13 +147,13 @@ export default function Game() {
           x: coords.x, 
           y: coords.y 
         }]);
-        
+
         // Clear triggers after animation
         setTimeout(() => {
           setHeartTriggers([]);
         }, 100);
       }
-      
+
       return data;
     },
     onSuccess: (data) => {
@@ -161,7 +161,7 @@ export default function Game() {
       queryClient.invalidateQueries({ queryKey: ["/api/user", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/upgrades", MOCK_USER_ID] });
-      
+
       // Show success message with points earned
       if (data.pointsEarned) {
         toast({
@@ -184,7 +184,7 @@ export default function Game() {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX;
     const y = event.clientY;
-    
+
     tapMutation.mutate({ x, y });
   };
 
