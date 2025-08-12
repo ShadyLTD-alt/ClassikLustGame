@@ -185,8 +185,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl h-[90vh] bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-lg text-white border-0 shadow-2xl">
-          <DialogHeader className="border-b border-white/10 pb-4">
+        <DialogContent className="max-w-6xl max-h-[90vh] bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-lg text-white border-0 shadow-2xl overflow-hidden">
+          <DialogHeader className="border-b border-white/10 pb-4 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
@@ -206,35 +206,36 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             </div>
           </DialogHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur border border-white/10">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600/80 data-[state=active]:text-white">
-                <BarChart3 className="w-4 h-4 mr-2" />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur border border-white/10 flex-shrink-0">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600/80 data-[state=active]:text-white text-xs">
+                <BarChart3 className="w-4 h-4 mr-1" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="characters" className="data-[state=active]:bg-purple-600/80 data-[state=active]:text-white">
-                <Gamepad2 className="w-4 h-4 mr-2" />
+              <TabsTrigger value="characters" className="data-[state=active]:bg-purple-600/80 data-[state=active]:text-white text-xs">
+                <Gamepad2 className="w-4 h-4 mr-1" />
                 Characters
               </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-green-600/80 data-[state=active]:text-white">
-                <Users className="w-4 h-4 mr-2" />
+              <TabsTrigger value="users" className="data-[state=active]:bg-green-600/80 data-[state=active]:text-white text-xs">
+                <Users className="w-4 h-4 mr-1" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="media" className="data-[state=active]:bg-orange-600/80 data-[state=active]:text-white">
-                <Image className="w-4 h-4 mr-2" />
+              <TabsTrigger value="media" className="data-[state=active]:bg-orange-600/80 data-[state=active]:text-white text-xs">
+                <Image className="w-4 h-4 mr-1" />
                 Media
               </TabsTrigger>
-              <TabsTrigger value="economy" className="data-[state=active]:bg-yellow-600/80 data-[state=active]:text-white">
-                <DollarSign className="w-4 h-4 mr-2" />
+              <TabsTrigger value="economy" className="data-[state=active]:bg-yellow-600/80 data-[state=active]:text-white text-xs">
+                <DollarSign className="w-4 h-4 mr-1" />
                 Economy
               </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600/80 data-[state=active]:text-white">
-                <Settings className="w-4 h-4 mr-2" />
+              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600/80 data-[state=active]:text-white text-xs">
+                <Settings className="w-4 h-4 mr-1" />
                 Settings
               </TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="flex-1 p-6">
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full p-6">
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -334,37 +335,37 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {characters.map((character: any) => (
                     <Card key={character.id} className="bg-slate-800/40 backdrop-blur border-slate-600/30 hover:border-purple-400/50 transition-all">
-                      <CardContent className="p-6">
+                      <CardContent className="p-4">
                         <div className="text-center">
-                          <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-2 border-purple-400/30">
+                          <div className="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-purple-400/30">
                             <img 
                               src={character.imageUrl || '/api/placeholder-image'} 
                               alt={character.name}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="text-lg font-bold text-white mb-2">{character.name}</div>
-                          <div className="text-sm text-slate-300 mb-3">{character.bio || character.description}</div>
-                          <div className="flex justify-center gap-2 mb-4">
-                            <Badge variant="secondary" className="bg-slate-700/50 text-slate-300">
+                          <div className="text-base font-bold text-white mb-2 truncate">{character.name}</div>
+                          <div className="text-xs text-slate-300 mb-3 line-clamp-2">{character.bio || character.description}</div>
+                          <div className="flex justify-center gap-1 mb-3 flex-wrap">
+                            <Badge variant="secondary" className="bg-slate-700/50 text-slate-300 text-xs">
                               Lvl {character.requiredLevel || character.unlockLevel || 1}
                             </Badge>
-                            <Badge variant="outline" className="border-purple-400/50 text-purple-300">
+                            <Badge variant="outline" className="border-purple-400/50 text-purple-300 text-xs">
                               {character.personality || 'friendly'}
                             </Badge>
                           </div>
-                          <div className="flex justify-center gap-2">
+                          <div className="flex justify-center gap-1">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditCharacter(character)}
-                              className="border-slate-500/50 text-slate-300 hover:bg-slate-600/50"
+                              className="border-slate-500/50 text-slate-300 hover:bg-slate-600/50 p-2"
                               title="Edit Character"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-3 h-3" />
                             </Button>
                             <Button
                               size="sm"
@@ -373,19 +374,19 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                                 setSelectedCharacterForAI(character.id);
                                 setShowAIFunctions(true);
                               }}
-                              className="border-blue-500/50 text-blue-300 hover:bg-blue-600/20"
+                              className="border-blue-500/50 text-blue-300 hover:bg-blue-600/20 p-2"
                               title="AI Functions"
                             >
-                              <Bot className="w-4 h-4" />
+                              <Bot className="w-3 h-3" />
                             </Button>
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteCharacter(character.id)}
-                              className="bg-red-600/20 border-red-500/50 hover:bg-red-600/40"
+                              className="bg-red-600/20 border-red-500/50 hover:bg-red-600/40 p-2"
                               title="Delete"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
                         </div>
@@ -449,14 +450,14 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {Array.isArray(mediaFiles) && mediaFiles.map((media, index) => (
                     <Card key={media.id || media.filename || index} className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                       <CardContent className="p-2">
                         <img 
                           src={media.path || `/uploads/${media.filename}`} 
                           alt={media.originalName || media.filename} 
-                          className="w-full h-24 rounded object-cover bg-slate-700/30 mb-2"
+                          className="w-full h-20 rounded object-cover bg-slate-700/30 mb-2"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/api/placeholder-image';
                           }}
@@ -469,8 +470,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               </TabsContent>
 
               {/* Economy Tab */}
-              <TabsContent value="economy" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TabsContent value="economy" className="space-y-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {/* Upgrades Management */}
                   <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
@@ -595,8 +596,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               </TabsContent>
 
               {/* Settings Tab */}
-              <TabsContent value="settings" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TabsContent value="settings" className="space-y-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {/* Trigger Words */}
                   <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
@@ -676,6 +677,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                 </div>
               </TabsContent>
             </ScrollArea>
+            </div>
           </Tabs>
         </DialogContent>
       </Dialog>
