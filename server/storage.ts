@@ -17,6 +17,8 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
+import Database from 'better-sqlite3';
+
 export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
@@ -644,3 +646,24 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+let db: Database.Database | null = null;
+
+export function initDB() {
+  db = new Database('./data.db'); // your DB file path
+  console.log('[Storage] DB initialized.');
+}
+
+export function isDBReady() {
+  return db !== null;
+}
+
+export function getAllUsers() {
+  if (!db) throw new Error('DB not initialized');
+  return db.prepare('SELECT * FROM users').all();
+}
+
+export function updateUserEnergy(userId: number) {
+  if (!db) throw new Error('DB not initialized');
+  db.prepare('UPDATE users SET energy = energy + 1 WHERE id = ?').run(userId);
+}

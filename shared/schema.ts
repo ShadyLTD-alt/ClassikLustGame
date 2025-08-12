@@ -2,7 +2,16 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { SQLiteStorage } from './SQLiteStorage';
 
+const storage = new SQLiteStorage();
+
+function main() {
+  initDB(); // instant connection
+  startEnergyRegen();
+}
+
+main();
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),

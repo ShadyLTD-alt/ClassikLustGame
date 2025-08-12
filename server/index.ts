@@ -1,6 +1,19 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initDB } from './storage';
+import { initDB } from './storage';
+import { startEnergyRegen } from './safe-energy';
+import { SQLiteStorage } from './SQLiteStorage';
+
+const storage = new SQLiteStorage();
+
+function main() {
+  initDB(); // instant connection
+  startEnergyRegen();
+}
+
+main();
 
 const app = express();
 app.use(express.json());
