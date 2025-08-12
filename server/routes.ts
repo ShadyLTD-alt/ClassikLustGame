@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files
   app.use('/uploads', express.static('./public/uploads'));
   app.use('/public', express.static('./public'));
-  
+
   // User routes
   app.get("/api/user/:id", async (req, res) => {
     try {
@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (planId === "daily") endDate.setDate(endDate.getDate() + 1);
       else if (planId === "weekly") endDate.setDate(endDate.getDate() + 7);
       else if (planId === "monthly") endDate.setDate(endDate.getDate() + 30);
-      
+
       res.json({ 
         planType: planId, 
         isActive: true, 
@@ -449,11 +449,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      
+
       const updatedUser = await storage.updateUser(userId, {
         nsfwEnabled: !user.nsfwEnabled
       });
-      
+
       res.json({ nsfwEnabled: updatedUser?.nsfwEnabled });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -663,7 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete media file
-  app.delete("/api/media/:id", async (req, res) => {
+  app.delete('/api/media/:id', async (req, res) => {
     try {
       const mediaFile = await storage.getMediaFile(req.params.id);
       if (!mediaFile) {
@@ -687,13 +687,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Assign media to character
-  app.post("/api/media/:id/assign", async (req, res) => {
+  app.post('/api/media/:id/assign', async (req, res) => {
     try {
       const { characterId } = req.body;
       await storage.assignMediaToCharacter(req.params.id, characterId);
+
+      // If this is a character's main image, update the character's imageUrl
+      if (characterId) {
+        const media = await storage.getMediaFile(req.params.id);
+        if (media) {
+          await storage.updateCharacter(characterId, { 
+            imageUrl: media.url || media.path 
+          });
+        }
+      }
+
       res.json({ success: true, message: "Media assigned to character" });
     } catch (error) {
+      console.error('Error assigning media:', error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -820,7 +831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/character/:id", async (req, res) => {
     try {
       console.log(`Updating character ${req.params.id} with:`, req.body);
-      
+
       // Ensure data is properly formatted
       const updateData = {
         ...req.body,
@@ -836,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customGreetings: req.body.customGreetings || [],
         customResponses: req.body.customResponses || [],
       };
-      
+
       const character = await storage.updateCharacter(req.params.id, updateData);
       if (!character) {
         return res.status(404).json({ error: "Character not found" });
