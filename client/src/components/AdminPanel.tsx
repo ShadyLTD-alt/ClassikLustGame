@@ -104,14 +104,14 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
           <div className="space-y-6">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-7 bg-black/20">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="characters">Characters</TabsTrigger>
-                <TabsTrigger value="users">Users</TabsTrigger>
-                <TabsTrigger value="media">Media</TabsTrigger>
-                <TabsTrigger value="tools">Tools</TabsTrigger>
-                <TabsTrigger value="layout">Layout</TabsTrigger>
-                <TabsTrigger value="character-editor">Edit</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-7 bg-gray-800/50 border border-purple-500/30">
+                <TabsTrigger value="overview" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Overview</TabsTrigger>
+                <TabsTrigger value="characters" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Characters</TabsTrigger>
+                <TabsTrigger value="users" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Users</TabsTrigger>
+                <TabsTrigger value="media" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Media</TabsTrigger>
+                <TabsTrigger value="tools" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Tools</TabsTrigger>
+                <TabsTrigger value="layout" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Layout</TabsTrigger>
+                <TabsTrigger value="character-editor" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Edit</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}

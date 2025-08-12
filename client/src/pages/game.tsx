@@ -16,6 +16,7 @@ import AdminPanel from "@/components/AdminPanel";
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";
+import FloatingHearts from "@/components/FloatingHearts";
 import { 
   Settings, 
   Heart, 
@@ -52,6 +53,7 @@ export default function Game() {
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [heartTriggers, setHeartTriggers] = useState<Array<{ amount: number; x: number; y: number }>>([]);
   const { toast } = useToast();
 
   // Settings state
@@ -126,18 +128,29 @@ export default function Game() {
 
   // Tap mutation
   const tapMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (coords?: { x: number; y: number }) => {
       const response = await apiRequest("POST", "/api/tap", { userId: MOCK_USER_ID });
-      return response.json();
+      const data = await response.json();
+      
+      // Trigger floating heart animation if coordinates provided
+      if (coords) {
+        setHeartTriggers(prev => [...prev, { 
+          amount: data.pointsEarned || 1, 
+          x: coords.x, 
+          y: coords.y 
+        }]);
+        
+        // Clear triggers after animation
+        setTimeout(() => {
+          setHeartTriggers([]);
+        }, 100);
+      }
+      
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/user", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
-
-      toast({
-        title: "Tap Success!",
-        description: `Earned ${data.pointsEarned} points!`,
-      });
     },
     onError: (error: any) => {
       toast({
@@ -147,6 +160,15 @@ export default function Game() {
       });
     },
   });
+
+  // Handle tap with floating hearts
+  const handleTap = (event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX;
+    const y = event.clientY;
+    
+    tapMutation.mutate({ x, y });
+  };
 
   const handleSettingChange = (key: string, value: any) => {
     setLocalSettings(prev => ({
@@ -267,7 +289,7 @@ export default function Game() {
             character={character}
             user={user}
             stats={stats}
-            onTap={() => tapMutation.mutate()}
+            onTap={handleTap}
             isTapping={tapMutation.isPending}
           />
         </div>
@@ -542,6 +564,9 @@ export default function Game() {
         onClose={() => setShowVIPModal(false)}
         userId={MOCK_USER_ID}
       />
+
+      {/* Floating Hearts Animation */}
+      <FloatingHearts triggers={heartTriggers} />
     </div>
   );
 }

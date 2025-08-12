@@ -6,18 +6,18 @@ interface CharacterDisplayProps {
   character: Character;
   user: User;
   stats?: GameStats;
-  onTap: () => void;
+  onTap: (event: React.MouseEvent) => void;
   isTapping: boolean;
 }
 
 export default function CharacterDisplay({ character, user, stats, onTap, isTapping }: CharacterDisplayProps) {
   const [tapEffect, setTapEffect] = useState(false);
 
-  const handleTap = () => {
+  const handleTap = (event: React.MouseEvent) => {
     if (user.energy <= 0 || isTapping) return;
 
     setTapEffect(true);
-    onTap();
+    onTap(event);
 
     // Remove tap effect after animation
     setTimeout(() => {
@@ -25,7 +25,7 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
     }, 200);
   };
 
-  const energyPercentage = (user.energy / user.maxEnergy) * 100;
+  const energyPercentage = ((user.energy || 0) / (user.maxEnergy || 1)) * 100;
 
   return (
     <div className="px-4 pb-6">
@@ -45,7 +45,7 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
         {/* Character Image Container */}
         <div className="relative mx-auto w-64 h-80 mb-6">
           <img 
-            src={character.imageUrl} 
+            src={character.imageUrl || '/api/placeholder-image'} 
             alt={character.name}
             className={`w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float ${
               tapEffect ? 'tap-effect' : ''
