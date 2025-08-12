@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import CharacterCreation from "@/components/CharacterCreation";
 import ImageManager from "@/components/ImageManager";
 import AICustomFunctions from "@/components/AICustomFunctions";
+import LayoutEditor from "@/components/LayoutEditor";
 import { Edit, Trash2, Bot, Brain } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
@@ -37,6 +38,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   const [showImageManager, setShowImageManager] = useState(false);
   const [showWheelGame, setShowWheelGame] = useState(false);
   const [showAIFunctions, setShowAIFunctions] = useState(false);
+  const [showLayoutEditor, setShowLayoutEditor] = useState(false);
   const [selectedCharacterForAI, setSelectedCharacterForAI] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -102,12 +104,13 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
           <div className="space-y-6">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6 bg-black/20">
+              <TabsList className="grid w-full grid-cols-7 bg-black/20">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="characters">Characters</TabsTrigger>
                 <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="media">Media</TabsTrigger>
                 <TabsTrigger value="tools">Tools</TabsTrigger>
+                <TabsTrigger value="layout">Layout</TabsTrigger>
                 <TabsTrigger value="character-editor">Edit</TabsTrigger>
               </TabsList>
 
@@ -282,6 +285,20 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
                   <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
+                      <CardTitle className="text-white">🎨 Layout Editor</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        onClick={() => setShowLayoutEditor(true)}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        Open Layout Editor
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">
+                    <CardHeader>
                       <CardTitle className="text-white">⚙️ System Settings</CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -296,6 +313,17 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                     </CardContent>
                   </Card>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="layout" className="space-y-6">
+                <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                  <CardHeader>
+                    <CardTitle className="text-white">🎨 Site Layout & Design</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <LayoutEditor onClose={() => {}} />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="character-editor" className="space-y-6">
@@ -422,6 +450,20 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             </DialogDescription>
           </DialogHeader>
           <AICustomFunctions characterId={selectedCharacterForAI} onClose={() => setShowAIFunctions(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLayoutEditor} onOpenChange={setShowLayoutEditor}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white">
+              🎨 Site Layout & Design Editor
+            </DialogTitle>
+            <DialogDescription>
+              Customize the visual appearance and layout of your entire site.
+            </DialogDescription>
+          </DialogHeader>
+          <LayoutEditor onClose={() => setShowLayoutEditor(false)} />
         </DialogContent>
       </Dialog>
     </>

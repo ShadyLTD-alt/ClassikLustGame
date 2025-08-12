@@ -25,7 +25,7 @@
     --input: 220 13% 91%;
     --ring: 220 90% 56%;
     --radius: 0.5rem;
-    
+
     /* ClassikLust Game Theme */
     --game-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --game-card: rgba(255, 255, 255, 0.1);
@@ -34,6 +34,32 @@
     --anime-pink: #ff69b4;
     --anime-purple: #9370db;
     --anime-blue: #00bfff;
+
+    /* Root variables */
+    --primary: #1e1b4b;
+    --primary-900: #312e81;
+    --dark-900: #111827;
+    --anime-pink: #ff6b9d;
+    --anime-purple: #c44569;
+    --anime-blue: #4ecdc4;
+    --anime-yellow: #ffe66d;
+
+    /* Dynamic theme variables */
+    --primary-color: #ff6b9d;
+    --secondary-color: #c44569;
+    --background-color: #1a1a2e;
+    --text-color: #ffffff;
+    --accent-color: #4ecdc4;
+    --font-family: 'Inter';
+    --header-font-size: 24px;
+    --body-font-size: 16px;
+    --font-weight: normal;
+    --border-radius: 12px;
+    --card-padding: 20px;
+    --button-padding: 12px 24px;
+    --spacing: 16px;
+    --character-image-size: 300px;
+    --character-border-radius: 15px;
   }
 
   .dark {
@@ -175,11 +201,11 @@
   .game-container {
     padding: 1rem;
   }
-  
+
   .character-card {
     margin-bottom: 1rem;
   }
-  
+
   .tap-button {
     width: 200px;
     height: 200px;
@@ -233,7 +259,7 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169, 89.1213%, 53.1373%, 0.00);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
-  
+
   /* Game-specific colors */
   --primary-700: hsl(258, 75%, 56%);
   --primary-800: hsl(260, 79%, 44%);

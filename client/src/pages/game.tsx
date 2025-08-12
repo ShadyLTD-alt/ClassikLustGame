@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import CharacterDisplay from "@/components/CharacterDisplay";
 import UpgradeModal from "@/components/UpgradeModal";
 import ChatModal from "@/components/ChatModal";
@@ -334,6 +334,7 @@ export default function Game() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900 via-dark-900 to-primary-800 text-white border-gray-600">
           <DialogHeader>
             <DialogTitle className="text-3xl font-bold gradient-text">Settings</DialogTitle>
+            <DialogDescription>Adjust your game preferences and appearance.</DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="general" className="space-y-6">
@@ -544,4 +545,3 @@ export default function Game() {
     </div>
   );
 }
-

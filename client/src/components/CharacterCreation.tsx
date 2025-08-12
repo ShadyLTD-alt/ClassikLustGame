@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Save, Eye, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Character form schema based on your requirements
 const characterSchema = z.object({

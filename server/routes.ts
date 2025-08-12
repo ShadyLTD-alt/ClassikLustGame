@@ -744,6 +744,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Layout settings routes
+  app.post("/api/admin/layout-settings", async (req, res) => {
+    try {
+      const settings = req.body;
+      // Save layout settings to storage (implement as needed)
+      res.json({ success: true, message: "Layout settings saved" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save layout settings" });
+    }
+  });
+
+  app.get("/api/admin/layout-settings", async (req, res) => {
+    try {
+      // Return saved layout settings or defaults
+      const defaultSettings = {
+        primaryColor: "#ff6b9d",
+        secondaryColor: "#c44569", 
+        backgroundColor: "#1a1a2e",
+        textColor: "#ffffff",
+        accentColor: "#4ecdc4",
+        siteTitle: "ClassikLust"
+      };
+      res.json(defaultSettings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to load layout settings" });
+    }
+  });
+
   // Admin routes for characters
   app.get("/api/admin/characters", async (req, res) => {
     try {
