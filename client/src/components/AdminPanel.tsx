@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import ImageManager from "./ImageManager";
+import CharacterEditor from "./CharacterEditor";
 import { 
   Users, 
   Gamepad2, 
@@ -79,6 +80,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [showCharacterEditor, setShowCharacterEditor] = useState(false);
   const [newPrize, setNewPrize] = useState({
     type: "points",
     min: 10,
@@ -210,9 +213,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             <Shield className="w-8 h-8 text-blue-400" />
             Admin Control Panel
           </DialogTitle>
-          <DialogDescription className="text-slate-300">
+          <div className="text-slate-300">
             Comprehensive game administration and management dashboard
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
@@ -425,7 +428,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 size="sm" 
                                 variant="outline"
                                 className="text-purple-400 border-purple-400 hover:bg-purple-400/10"
-                                onClick={() => setSelectedCharacter(character)}
+                                onClick={() => {
+                                  setEditingCharacter(character);
+                                  setShowCharacterEditor(true);
+                                }}
                               >
                                 <Edit className="w-3 h-3" />
                               </Button>
@@ -765,6 +771,34 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           </ScrollArea>
         </Tabs>
       </DialogContent>
+      
+      {/* Character Editor Modal */}
+      {showCharacterEditor && editingCharacter && (
+        <Dialog open={showCharacterEditor} onOpenChange={setShowCharacterEditor}>
+          <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-white">
+                Edit Character: {editingCharacter.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto max-h-[80vh]">
+              <CharacterEditor
+                character={editingCharacter}
+                isEditing={true}
+                onSuccess={() => {
+                  setShowCharacterEditor(false);
+                  setEditingCharacter(null);
+                  queryClient.invalidateQueries({ queryKey: ["/api/admin/characters"] });
+                }}
+                onCancel={() => {
+                  setShowCharacterEditor(false);
+                  setEditingCharacter(null);
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
