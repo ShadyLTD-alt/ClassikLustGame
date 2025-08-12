@@ -16,6 +16,8 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<string>("");
   const [uploadCategory, setUploadCategory] = useState<string>("character");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterCharacter, setFilterCharacter] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -100,9 +102,12 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
     });
 
     // Add metadata
-    formData.append('characterId', selectedCharacter);
+    if (selectedCharacter && selectedCharacter !== 'unassigned') {
+      formData.append('characterId', selectedCharacter);
+    }
     formData.append('userId', 'mock-user-id');
     formData.append('category', uploadCategory);
+    formData.append('fileType', uploadCategory);
 
     uploadMutation.mutate(formData);
   };
@@ -154,8 +159,10 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="character">Character Image</SelectItem>
-                  <SelectItem value="background">Background</SelectItem>
                   <SelectItem value="avatar">Avatar</SelectItem>
+                  <SelectItem value="background">Background</SelectItem>
+                  <SelectItem value="event">Event Image</SelectItem>
+                  <SelectItem value="ui">UI Element</SelectItem>
                   <SelectItem value="misc">Miscellaneous</SelectItem>
                 </SelectContent>
               </Select>
@@ -209,7 +216,39 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
       {/* Media Gallery */}
       <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
         <CardHeader>
-          <CardTitle className="text-white">Media Gallery</CardTitle>
+          <CardTitle className="text-white flex items-center justify-between">
+            <span>Media Gallery</span>
+            <div className="flex items-center gap-2">
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-40 bg-black/30 border-white/20 text-white text-xs">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="character">Character Images</SelectItem>
+                  <SelectItem value="avatar">Avatars</SelectItem>
+                  <SelectItem value="background">Backgrounds</SelectItem>
+                  <SelectItem value="event">Event Images</SelectItem>
+                  <SelectItem value="ui">UI Elements</SelectItem>
+                  <SelectItem value="misc">Miscellaneous</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterCharacter} onValueChange={setFilterCharacter}>
+                <SelectTrigger className="w-40 bg-black/30 border-white/20 text-white text-xs">
+                  <SelectValue placeholder="Filter by character" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Characters</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {characters.map((char: any) => (
+                    <SelectItem key={char.id} value={char.id}>
+                      {char.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -222,11 +261,18 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {mediaFiles.map((file: any) => (
+              {mediaFiles
+                .filter((file: any) => 
+                  (filterCategory === 'all' || file.fileType === filterCategory) &&
+                  (filterCharacter === 'all' || 
+                   (filterCharacter === 'unassigned' && !file.characterId) ||
+                   file.characterId === filterCharacter)
+                )
+                .map((file: any) => (
                 <div key={file.id} className="relative group">
                   <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
                     <img
-                      src={file.path}
+                      src={file.url || file.path}
                       alt={file.originalName}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -253,8 +299,16 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                       </Button>
                     </div>
                   </div>
-                  <div className="text-xs text-white mt-1 truncate">
-                    {file.originalName}
+                  <div className="text-xs text-white mt-1 space-y-1">
+                    <div className="truncate">{file.originalName}</div>
+                    <div className="text-gray-400 flex justify-between">
+                      <span className="capitalize">{file.fileType || 'image'}</span>
+                      {file.characterId && (
+                        <span className="text-purple-400">
+                          {characters.find((c: any) => c.id === file.characterId)?.name || 'Unknown'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

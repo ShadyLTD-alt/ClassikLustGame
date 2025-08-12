@@ -590,7 +590,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             size: (await fs.stat(processedPath)).size,
             path: `/uploads/${path.basename(processedPath)}`,
             characterId: characterId || null,
-            uploadedBy: userId || 'anonymous'
+            uploadedBy: userId || 'anonymous',
+            fileType: req.body.fileType || req.body.category || 'image'
           };
 
           const savedFile = await storage.uploadMedia({
@@ -777,12 +778,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/character/:id", async (req, res) => {
     try {
+      console.log(`Updating character ${req.params.id} with:`, req.body);
       const character = await storage.updateCharacter(req.params.id, req.body);
       if (!character) {
         return res.status(404).json({ error: "Character not found" });
       }
       res.json(character);
     } catch (error) {
+      console.error('Character update error:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/character/:id", async (req, res) => {
+    try {
+      console.log(`PUT updating character ${req.params.id} with:`, req.body);
+      const character = await storage.updateCharacter(req.params.id, req.body);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
+      res.json(character);
+    } catch (error) {
+      console.error('Character PUT update error:', error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

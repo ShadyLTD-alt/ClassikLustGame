@@ -142,7 +142,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
     mutationFn: (data: any) => {
       const url = editingCharacter ? `/api/character/${editingCharacter.id}` : '/api/character';
       const method = editingCharacter ? 'PUT' : 'POST';
-      return apiRequest(url, { method, body: data });
+      return apiRequest(method, url, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/characters'] });
