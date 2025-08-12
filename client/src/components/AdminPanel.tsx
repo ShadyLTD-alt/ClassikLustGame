@@ -423,22 +423,26 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               <p className="text-xs text-slate-500 mt-1">{character.bio}</p>
                             </div>
                             <div className="flex gap-2 flex-col items-end">
-                              <div className="flex gap-1">
+                              <div className="flex gap-1 flex-wrap">
                                 {character.isNsfw && <Badge className="bg-red-500 text-xs">NSFW</Badge>}
                                 {character.isVip && <Badge className="bg-yellow-500 text-xs">VIP</Badge>}
                                 {character.isEvent && <Badge className="bg-purple-500 text-xs">Event</Badge>}
+                                {character.isWheelReward && <Badge className="bg-orange-500 text-xs">Wheel</Badge>}
                               </div>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                className="text-purple-400 border-purple-400 hover:bg-purple-400/10"
-                                onClick={() => {
-                                  setEditingCharacter(character);
-                                  setShowCharacterEditor(true);
-                                }}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
+                                  onClick={() => {
+                                    setEditingCharacter(character);
+                                    setShowCharacterEditor(true);
+                                  }}
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -690,10 +694,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     Image Management System
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <div className="min-h-[500px]">
-                    <ImageManager isOpen={true} onClose={() => {}} />
-                  </div>
+                <CardContent>
+                  <ImageManager isOpen={true} onClose={() => {}} />
                 </CardContent>
               </Card>
             </TabsContent>
