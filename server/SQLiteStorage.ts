@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-import type { User, Character, Upgrade, GameStats, ChatMessage, MediaFile } from '@shared/types';
+import type { User, Character, Upgrade, GameStats, ChatMessage, MediaFile } from '@shared/schema';
 
 export class SQLiteStorage {
   private db: Database.Database;
@@ -59,3 +59,29 @@ export class SQLiteStorage {
         message TEXT,
         isFromUser INTEGER,
         createdAt INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS mediafiles (
+        id TEXT PRIMARY KEY,
+        filename TEXT,
+        originalName TEXT,
+        mimeType TEXT,
+        size INTEGER,
+        fileType TEXT,
+        url TEXT,
+        path TEXT,
+        characterId TEXT,
+        uploadedBy TEXT,
+        tags TEXT,
+        description TEXT,
+        isNsfw INTEGER DEFAULT 0,
+        requiredLevel INTEGER DEFAULT 1,
+        chatSendChance INTEGER DEFAULT 5,
+        isVipOnly INTEGER DEFAULT 0,
+        isEventOnly INTEGER DEFAULT 0,
+        isWheelReward INTEGER DEFAULT 0,
+        createdAt INTEGER
+      );
+    `);
+  }
+}

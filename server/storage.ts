@@ -277,21 +277,21 @@ export class MemStorage implements IStorage {
 
   private async loadExistingMediaFiles() {
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       const uploadsDir = './public/uploads';
 
-      if (!fs.existsSync(uploadsDir)) {
+      if (!fs.default.existsSync(uploadsDir)) {
         console.log('Uploads directory does not exist');
         return;
       }
 
-      const files = fs.readdirSync(uploadsDir);
+      const files = fs.default.readdirSync(uploadsDir);
 
       for (const filename of files) {
         if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          const filePath = path.join(uploadsDir, filename);
-          const stats = fs.statSync(filePath);
+          const filePath = path.default.join(uploadsDir, filename);
+          const stats = fs.default.statSync(filePath);
 
           const mediaFile: MediaFile = {
             id: randomUUID(),
@@ -591,12 +591,7 @@ export class MemStorage implements IStorage {
   }
 
   async recordWheelSpin(userId: string, reward: string): Promise<void> {
-    const stmt = this.db.prepare(`
-      INSERT INTO wheel_spins (userId, reward, timestamp)
-      VALUES (?, ?, ?)
-    `);
-
-    stmt.run(userId, reward, Date.now());
+    this.wheelSpins.set(userId, new Date());
   }
 
   // Energy regeneration system
@@ -604,12 +599,12 @@ export class MemStorage implements IStorage {
     // Regenerate 3 energy every 5 seconds for all users
     this.energyRegenInterval = setInterval(async () => {
       try {
-        const stmt = this.db.prepare(`
-          UPDATE users 
-          SET energy = MIN(maxEnergy, energy + 3) 
-          WHERE energy < maxEnergy
-        `);
-        stmt.run();
+        for (const [userId, user] of this.users.entries()) {
+          if (user.energy < user.maxEnergy) {
+            const newEnergy = Math.min(user.maxEnergy, user.energy + 3);
+            await this.updateUser(userId, { energy: newEnergy });
+          }
+        }
       } catch (error) {
         console.error("Error regenerating energy:", error);
       }
@@ -625,12 +620,12 @@ export class MemStorage implements IStorage {
     // Start new interval with custom settings
     this.energyRegenInterval = setInterval(async () => {
       try {
-        const stmt = this.db.prepare(`
-          UPDATE users 
-          SET energy = MIN(maxEnergy, energy + ?) 
-          WHERE energy < maxEnergy
-        `);
-        stmt.run(regenAmount);
+        for (const [userId, user] of this.users.entries()) {
+          if (user.energy < user.maxEnergy) {
+            const newEnergy = Math.min(user.maxEnergy, user.energy + regenAmount);
+            await this.updateUser(userId, { energy: newEnergy });
+          }
+        }
       } catch (error) {
         console.error("Error regenerating energy:", error);
       }
@@ -641,29 +636,47 @@ export class MemStorage implements IStorage {
     if (this.energyRegenInterval) {
       clearInterval(this.energyRegenInterval);
     }
-    this.db.close();
+  }
+
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  // Game settings methods
+  async getGameSettings(): Promise<GameSettings> {
+    return this.gameSettings;
+  }
+
+  async updateGameSettings(settings: Partial<GameSettings>): Promise<void> {
+    this.gameSettings = { ...this.gameSettings, ...settings, updatedAt: new Date() };
+  }
+
+  async getSystemStats(): Promise<any> {
+    return {
+      totalUsers: this.users.size,
+      totalCharacters: this.characters.size,
+      totalUpgrades: this.upgrades.size,
+      totalChatMessages: Array.from(this.chatMessages.values()).reduce((sum, msgs) => sum + msgs.length, 0),
+      totalMediaFiles: this.mediaFiles.size
+    };
+  }
+
+  async exportAllData(): Promise<any> {
+    return {
+      users: Array.from(this.users.values()),
+      characters: Array.from(this.characters.values()),
+      upgrades: Array.from(this.upgrades.values()),
+      gameStats: Array.from(this.gameStats.values()),
+      chatMessages: Object.fromEntries(this.chatMessages),
+      mediaFiles: Array.from(this.mediaFiles.values()),
+      gameSettings: this.gameSettings
+    };
   }
 }
 
 export const storage = new MemStorage();
 
-let db: Database.Database | null = null;
-
 export function initDB() {
-  db = new Database('./data.db'); // your DB file path
   console.log('[Storage] DB initialized.');
-}
-
-export function isDBReady() {
-  return db !== null;
-}
-
-export function getAllUsers() {
-  if (!db) throw new Error('DB not initialized');
-  return db.prepare('SELECT * FROM users').all();
-}
-
-export function updateUserEnergy(userId: number) {
-  if (!db) throw new Error('DB not initialized');
-  db.prepare('UPDATE users SET energy = energy + 1 WHERE id = ?').run(userId);
 }

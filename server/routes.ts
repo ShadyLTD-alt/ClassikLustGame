@@ -980,7 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const settings = { regenAmount: 3, intervalSeconds: 5 }; // Replace with actual fetch from storage
       const users = await storage.getAllUsers(); // Fetch all users to update their energy
       for (const user of users) {
-        if (user.eenery < user.maxEnergy) { // Only regenerate if not at max energy
+        if (user.energy < user.maxEnergy) { // Only regenerate if not at max energy
           const newEnergy = Math.min(user.maxEnergy, user.energy + settings.regenAmount);
           await storage.updateUser(user.id, { energy: newEnergy });
           // console.log(`Regenerated energy for user ${user.id}. New energy: ${newEnergy}`);
