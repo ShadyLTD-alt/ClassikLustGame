@@ -42,7 +42,8 @@ import {
   Bot,
   Brain,
   X,
-  Sparkles
+  Sparkles,
+  Shield // Imported Shield icon
 } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
@@ -203,7 +204,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[90vh] bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-lg text-white border-0 shadow-2xl overflow-hidden">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-lg text-white border-0 shadow-2xl overflow-hidden">
           <DialogHeader className="border-b border-white/10 pb-4 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
@@ -224,36 +225,38 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             </div>
           </DialogHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur border border-white/10 flex-shrink-0">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600/80 data-[state=active]:text-white text-xs">
-                <BarChart3 className="w-4 h-4 mr-1" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="characters" className="data-[state=active]:bg-purple-600/80 data-[state=active]:text-white text-xs">
-                <Gamepad2 className="w-4 h-4 mr-1" />
-                Characters
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-green-600/80 data-[state=active]:text-white text-xs">
-                <Users className="w-4 h-4 mr-1" />
-                Users
-              </TabsTrigger>
-              <TabsTrigger value="media" className="data-[state=active]:bg-orange-600/80 data-[state=active]:text-white text-xs">
-                <Image className="w-4 h-4 mr-1" />
-                Media
-              </TabsTrigger>
-              <TabsTrigger value="economy" className="data-[state=active]:bg-yellow-600/80 data-[state=active]:text-white text-xs">
-                <DollarSign className="w-4 h-4 mr-1" />
-                Economy
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600/80 data-[state=active]:text-white text-xs">
-                <Settings className="w-4 h-4 mr-1" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex-1 overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+              <div className="px-6 pb-4">
+                <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur border border-white/10 flex-shrink-0">
+                  <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600/80 data-[state=active]:text-white text-xs">
+                    <BarChart3 className="w-4 h-4 mr-1" />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="characters" className="data-[state=active]:bg-purple-600/80 data-[state=active]:text-white text-xs">
+                    <Gamepad2 className="w-4 h-4 mr-1" />
+                    Characters
+                  </TabsTrigger>
+                  <TabsTrigger value="users" className="data-[state=active]:bg-green-600/80 data-[state=active]:text-white text-xs">
+                    <Users className="w-4 h-4 mr-1" />
+                    Users
+                  </TabsTrigger>
+                  <TabsTrigger value="media" className="data-[state=active]:bg-orange-600/80 data-[state=active]:text-white text-xs">
+                    <Image className="w-4 h-4 mr-1" />
+                    Media
+                  </TabsTrigger>
+                  <TabsTrigger value="economy" className="data-[state=active]:bg-yellow-600/80 data-[state=active]:text-white text-xs">
+                    <DollarSign className="w-4 h-4 mr-1" />
+                    Economy
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="data-[state=active]:bg-red-600/80 data-[state=active]:text-white text-xs">
+                    <Settings className="w-4 h-4 mr-1" />
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <div className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full p-6">
+              <div className="flex-1 overflow-y-auto px-6 pb-6">
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -772,9 +775,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </Card>
                 </div>
               </TabsContent>
-            </ScrollArea>
+            </Tabs>
             </div>
-          </Tabs>
+          </div>
         </DialogContent>
       </Dialog>
 

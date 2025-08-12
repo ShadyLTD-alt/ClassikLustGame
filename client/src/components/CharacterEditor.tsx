@@ -151,11 +151,11 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
 
   const mutation = useMutation({
     mutationFn: async (data: CharacterEditForm) => {
-      const method = isEditing ? "PATCH" : "POST";
-      const endpoint = isEditing ? `/api/characters/${character?.id}` : "/api/characters";
+      const method = isEditing ? "PUT" : "POST";
+      const endpoint = isEditing ? `/api/admin/characters/${character?.id}` : "/api/admin/characters";
 
       try {
-        const response = await apiRequest(endpoint, method, data);
+        const response = await apiRequest(method, endpoint, data);
         return await response.json();
       } catch (error) {
         console.error("Character operation error:", error);
@@ -164,8 +164,8 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
     },
     onSuccess: () => {
       toast.success(isEditing ? "Character updated successfully!" : "Character created successfully!");
-      queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/characters"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/character/selected", MOCK_USER_ID] });
       if (onSuccess) onSuccess();
       if (!isEditing) form.reset();
     },

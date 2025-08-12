@@ -157,11 +157,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
         setMessages(prev => [...prev, characterMessage]);
         setCharacterMood(characterMessage.mood || 'normal');
 
-        // Update relationship points
-        toast({
-          title: "AI Response Received",
-          description: `${characterName} responded using AI!`,
-        });
+        // Update relationship points (removed popup notification)
       }
 
       // Invalidate chat history to refresh
