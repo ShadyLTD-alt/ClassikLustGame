@@ -629,8 +629,6 @@ export default function Game() {
 
       {/* Floating Hearts Animation */}
       <FloatingHearts triggers={heartTriggers} />
-
-      <Toaster />
     </div>
   );
 }
