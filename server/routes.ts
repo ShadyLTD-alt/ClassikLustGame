@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           energy: 4500,
           maxEnergy: 4500,
           hourlyRate: 0,
-          isAdmin: false,
+          isAdmin: true, // Make default user admin for testing
           nsfwEnabled: false,
           lustGems: 50 // Give some starting gems
         });
@@ -636,6 +636,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const characterData = insertCharacterSchema.parse(req.body);
       const character = await storage.createCharacter(characterData);
+      res.json(character);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid character data" });
+    }
+  });
+
+  app.put("/api/admin/characters/:id", async (req, res) => {
+    try {
+      const characterData = insertCharacterSchema.partial().parse(req.body);
+      const character = await storage.updateCharacter(req.params.id, characterData);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
       res.json(character);
     } catch (error) {
       res.status(400).json({ error: "Invalid character data" });

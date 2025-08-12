@@ -28,7 +28,7 @@ class MistralService {
     this.config = {
       apiKey: process.env.MISTRAL_API_KEY || '',
       model: 'ft:open-mistral-7b:0834440f:20250812:43c81adb', // Your custom trained model for character chat
-      debugModel: 'ag:0834440f:20250812:untitled-agent:d6ab8723' // Your agent model for debugging
+      debugModel: 'ft:ministral-3b-latest:0834440f:20250812:63a294f4' // Updated debugging model
     };
     // Auto-enable when API key is available
     this.enabled = !!this.config.apiKey;
