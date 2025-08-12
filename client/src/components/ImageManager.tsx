@@ -360,7 +360,10 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         console.warn('Image failed to load:', file.url || file.path);
-                        (e.target as HTMLImageElement).src = '/api/placeholder-image';
+                        const img = e.target as HTMLImageElement;
+                        if (!img.src.includes('placeholder-image')) {
+                          img.src = '/api/placeholder-image';
+                        }
                       }}
                     />
                   </div>

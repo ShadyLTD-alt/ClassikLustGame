@@ -42,7 +42,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
     },
   });
 
-  const canAfford = (cost: number) => user.points >= cost;
+  const canAfford = (upgrade: Upgrade) => user.points >= upgrade.cost;
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -89,7 +89,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
               <div 
                 key={upgrade.id} 
                 className={`bg-black/20 rounded-xl p-4 border-2 ${
-                  canAfford(upgrade.cost) ? 'border-green-400/50' : 'border-gray-500/50'
+                  canAfford(upgrade) ? 'border-green-400/50' : 'border-gray-500/50'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -129,22 +129,22 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">💰</span>
-                    <span className={`font-bold ${canAfford(upgrade.cost) ? 'text-yellow-400' : 'text-red-400'}`}>
+                    <span className={`font-bold ${canAfford(upgrade) ? 'text-yellow-400' : 'text-red-400'}`}>
                       {formatNumber(upgrade.cost)}
                     </span>
                   </div>
 
                   <Button
                     onClick={() => upgradeMutation.mutate(upgrade.id)}
-                    disabled={!canAfford(upgrade.cost) || upgradeMutation.isPending}
+                    disabled={!canAfford(upgrade) || upgradeMutation.isPending}
                     className={`px-4 py-2 rounded-full font-bold text-sm ${
-                      canAfford(upgrade.cost)
+                      canAfford(upgrade)
                         ? 'bg-green-500 hover:bg-green-600 text-white'
                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     }`}
                     data-testid={`button-upgrade-${upgrade.name.toLowerCase().replace(/\s+/g, '-')}`}
                   >
-                    {upgrade.level >= upgrade.maxLevel ? 'MAX' : canAfford(upgrade.cost) ? 'BUY' : 'LOCKED'}
+                    {upgrade.level >= upgrade.maxLevel ? 'MAX' : canAfford(upgrade) ? 'BUY' : 'LOCKED'}
                   </Button>
                 </div>
 

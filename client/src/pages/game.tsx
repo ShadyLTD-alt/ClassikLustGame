@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
-const DEFAULT_USER_ID = "default-player";
+const MOCK_USER_ID = "default-player";
 
 // Check if user is admin (you can modify this logic based on your needs)
 const isCurrentUserAdmin = (user: User | undefined) => {
@@ -88,25 +88,25 @@ export default function Game() {
 
   // Fetch selected character
   const { data: character, isLoading: characterLoading } = useQuery<Character>({
-    queryKey: ["/api/character/selected", DEFAULT_USER_ID],
+    queryKey: ["/api/character/selected", MOCK_USER_ID],
     enabled: !!user,
   });
 
   // Fetch user upgrades
   const { data: upgrades } = useQuery<Upgrade[]>({
-    queryKey: ["/api/upgrades", DEFAULT_USER_ID],
+    queryKey: ["/api/upgrades", MOCK_USER_ID],
     enabled: !!user,
   });
 
   // Fetch user stats
   const { data: stats } = useQuery<GameStats>({
-    queryKey: ["/api/stats", DEFAULT_USER_ID],
+    queryKey: ["/api/stats", MOCK_USER_ID],
     enabled: !!user,
   });
 
   // Fetch current settings and sync with user data
   useQuery({
-    queryKey: ['/api/settings', DEFAULT_USER_ID],
+    queryKey: ['/api/settings', MOCK_USER_ID],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/settings');
       return await response.json();
@@ -129,7 +129,7 @@ export default function Game() {
     mutationFn: async (newSettings: typeof localSettings) => {
       // Update user NSFW setting
       if (newSettings.nsfwEnabled !== localSettings.nsfwEnabled) {
-        const response = await apiRequest('POST', `/api/settings/toggle-nsfw/${DEFAULT_USER_ID}`);
+        const response = await apiRequest('POST', `/api/settings/toggle-nsfw/${MOCK_USER_ID}`);
         return await response.json();
       }
       return { success: true };
@@ -154,7 +154,7 @@ export default function Game() {
   // Tap mutation
   const tapMutation = useMutation({
     mutationFn: async (coords?: { x: number; y: number }) => {
-      const response = await apiRequest("POST", "/api/tap", { userId: user?.id || DEFAULT_USER_ID });
+      const response = await apiRequest("POST", "/api/tap", { userId: user?.id || MOCK_USER_ID });
       const data = await response.json();
 
       // Trigger floating heart animation if coordinates provided
@@ -176,8 +176,8 @@ export default function Game() {
     onSuccess: (data) => {
       // Force refresh user data to get updated points
       queryClient.invalidateQueries({ queryKey: ["/api/user/init"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats", DEFAULT_USER_ID] });
-      queryClient.invalidateQueries({ queryKey: ["/api/upgrades", DEFAULT_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/upgrades", MOCK_USER_ID] });
 
       // Removed toast notification as requested - using floating hearts instead
     },
@@ -522,7 +522,7 @@ export default function Game() {
                     <h4 className="font-semibold text-blue-400 mb-2">Debug Information</h4>
                     <div className="text-sm text-gray-300 space-y-1">
                       <div>Game Version: v1.0.0</div>
-                      <div>Player ID: {DEFAULT_USER_ID}</div>
+                      <div>Player ID: {MOCK_USER_ID}</div>
                       <div>Session: Active</div>
                       <div>Server Status: Connected</div>
                     </div>
@@ -593,19 +593,19 @@ export default function Game() {
       <WheelModal
         isOpen={showWheelModal}
         onClose={() => setShowWheelModal(false)}
-        userId={DEFAULT_USER_ID}
+        userId={MOCK_USER_ID}
       />
 
       <AchievementsModal
         isOpen={showAchievementsModal}
         onClose={() => setShowAchievementsModal(false)}
-        userId={DEFAULT_USER_ID}
+        userId={MOCK_USER_ID}
       />
 
       <VIPModal
         isOpen={showVIPModal}
         onClose={() => setShowVIPModal(false)}
-        userId={DEFAULT_USER_ID}
+        userId={MOCK_USER_ID}
       />
 
       <InGameAIControls

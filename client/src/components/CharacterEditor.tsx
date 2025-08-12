@@ -328,8 +328,8 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
                               </SelectTrigger>
                               <SelectContent className="bg-gray-700 border-gray-600">
                                 {(mediaFiles as any[]).map((file: any) => (
-                                  <SelectItem key={file.id} value={file.url} className="text-white">
-                                    {file.filename}
+                                  <SelectItem key={file.id} value={file.url || file.path || `/uploads/${file.filename}`} className="text-white">
+                                    {file.originalName || file.filename}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -353,8 +353,8 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
                               </SelectTrigger>
                               <SelectContent className="bg-gray-700 border-gray-600">
                                 {(mediaFiles as any[]).map((file: any) => (
-                                  <SelectItem key={file.id} value={file.url} className="text-white">
-                                    {file.filename}
+                                  <SelectItem key={file.id} value={file.url || file.path || `/uploads/${file.filename}`} className="text-white">
+                                    {file.originalName || file.filename}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
