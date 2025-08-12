@@ -10,6 +10,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { MediaFile } from "@shared/types";
+import { mistralService } from "./mistralService";
 
 // Configure multer for file uploads
 const uploadDir = './public/uploads';
@@ -275,12 +276,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messageData = insertChatMessageSchema.parse(req.body);
       const message = await storage.createChatMessage(messageData);
 
-      // TODO: Add AI response generation here
-      // For now, return a simple response
+      // Get character for personality context
+      const character = await storage.getCharacter(messageData.characterId);
+      
+      // Get recent conversation history
+      const recentMessages = await storage.getChatMessages(messageData.userId, messageData.characterId);
+      const conversationHistory = recentMessages.slice(-10).map(msg => ({
+        role: msg.isFromUser ? 'user' as const : 'assistant' as const,
+        content: msg.message
+      }));
+
+      let aiResponseText = "I understand! Thanks for talking with me.";
+
+      // Try MistralAI if enabled, otherwise use fallback
+      if (mistralService.isEnabled()) {
+        try {
+          aiResponseText = await mistralService.generateChatResponse({
+            message: messageData.message,
+            characterId: messageData.characterId,
+            conversationHistory,
+            characterPersonality: character?.personality || character?.bio || 'friendly'
+          });
+        } catch (error) {
+          console.warn('MistralAI chat failed, using fallback:', error);
+          // Use existing fallback logic
+        }
+      }
+
       const aiResponse = await storage.createChatMessage({
         userId: messageData.userId,
         characterId: messageData.characterId,
-        message: "I understand! Thanks for talking with me.",
+        message: aiResponseText,
         isFromUser: false
       });
 
@@ -1128,6 +1154,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendFile(filePath);
     } else {
       res.status(404).json({ error: 'File not found' });
+    }
+  });
+
+  // MistralAI Admin Routes
+  app.get("/api/admin/mistral/status", async (req, res) => {
+    try {
+      const status = {
+        enabled: mistralService.isEnabled(),
+        hasApiKey: !!process.env.MISTRAL_API_KEY
+      };
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get Mistral status" });
+    }
+  });
+
+  app.post("/api/admin/mistral/toggle", async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      mistralService.setEnabled(enabled);
+      res.json({ success: true, enabled: mistralService.isEnabled() });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to toggle Mistral" });
+    }
+  });
+
+  app.post("/api/admin/mistral/test", async (req, res) => {
+    try {
+      const result = await mistralService.testConnection();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Test failed" });
+    }
+  });
+
+  app.post("/api/debug/assist", async (req, res) => {
+    try {
+      const { code, error, context } = req.body;
+      const assistance = await mistralService.debugAssist({ code, error, context });
+      res.json({ assistance });
+    } catch (error) {
+      res.status(500).json({ error: "Debug assistance failed" });
     }
   });
 

@@ -19,6 +19,8 @@ import CharacterEditor from "@/components/CharacterEditor";
 import ImageManager from "@/components/ImageManager";
 import AICustomFunctions from "@/components/AICustomFunctions";
 import LayoutEditor from "@/components/LayoutEditor";
+import MistralDebugger from "@/components/MistralDebugger";
+import MistralControls from "@/components/MistralControls";
 import { 
   Edit3, 
   Trash2, 
@@ -38,7 +40,8 @@ import {
   Edit,
   Bot,
   Brain,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
@@ -64,6 +67,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   const [showWheelGame, setShowWheelGame] = useState(false);
   const [showAIFunctions, setShowAIFunctions] = useState(false);
   const [showLayoutEditor, setShowLayoutEditor] = useState(false);
+  const [showMistralDebugger, setShowMistralDebugger] = useState(false);
   const [selectedCharacterForAI, setSelectedCharacterForAI] = useState<string>("");
   const [newTriggerWord, setNewTriggerWord] = useState("");
   const [triggerResponse, setTriggerResponse] = useState("");
@@ -598,6 +602,22 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               {/* Settings Tab */}
               <TabsContent value="settings" className="space-y-4">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* MistralAI Settings */}
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Brain className="w-5 h-5" />
+                        MistralAI Integration
+                      </CardTitle>
+                      <CardDescription className="text-slate-300">
+                        Configure AI debugging and chat assistance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <MistralControls />
+                    </CardContent>
+                  </Card>
+
                   {/* Trigger Words */}
                   <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
@@ -664,13 +684,22 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                         <Switch />
                       </div>
                       <div className="mt-4">
-                        <Button 
-                          onClick={() => setShowLayoutEditor(true)}
-                          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 border-0"
-                        >
-                          <Layers className="w-4 h-4 mr-2" />
-                          Open Layout Editor
-                        </Button>
+                        <div className="space-y-2">
+                          <Button 
+                            onClick={() => setShowLayoutEditor(true)}
+                            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 border-0"
+                          >
+                            <Layers className="w-4 h-4 mr-2" />
+                            Open Layout Editor
+                          </Button>
+                          <Button 
+                            onClick={() => setShowMistralDebugger(true)}
+                            className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 border-0"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Debug Assistant
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -745,6 +774,11 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
           <LayoutEditor onClose={() => setShowLayoutEditor(false)} />
         </DialogContent>
       </Dialog>
+
+      <MistralDebugger 
+        isOpen={showMistralDebugger} 
+        onClose={() => setShowMistralDebugger(false)} 
+      />
     </>
   );
 }
