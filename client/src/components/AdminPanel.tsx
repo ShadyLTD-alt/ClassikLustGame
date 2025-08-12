@@ -211,7 +211,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   🎮 ClassikLust Admin Panel
                 </DialogTitle>
                 <DialogDescription className="text-slate-300 mt-1">
-                  Manage users, characters, media, and game settings
+                  Comprehensive admin interface for managing users, characters, media files, upgrades, and game settings
                 </DialogDescription>
               </div>
               <Button

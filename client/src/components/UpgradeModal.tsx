@@ -53,9 +53,8 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-purple-700 via-pink-600 to-red-600 text-white border-none max-w-sm p-0 rounded-3xl overflow-hidden h-[600px] flex flex-col">
-        
           <DialogTitle className="sr-only">Upgrades</DialogTitle>
-          <DialogDescription className="sr-only">A list of available upgrades to purchase.</DialogDescription>
+          <DialogDescription className="sr-only">A list of available upgrades to purchase with your points.</DialogDescription>
 
         {/* Header */}
         <div className="p-6 pb-0">

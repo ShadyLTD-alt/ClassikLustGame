@@ -355,10 +355,11 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                 <div key={file.id} className="relative group">
                   <div className="aspect-square bg-gray-800 rounded-lg overflow-hidden">
                     <img
-                      src={file.url || file.path}
-                      alt={file.originalName}
+                      src={file.url || file.path || `/uploads/${file.filename}`}
+                      alt={file.originalName || file.filename}
                       className="w-full h-full object-cover"
                       onError={(e) => {
+                        console.warn('Image failed to load:', file.url || file.path);
                         (e.target as HTMLImageElement).src = '/api/placeholder-image';
                       }}
                     />

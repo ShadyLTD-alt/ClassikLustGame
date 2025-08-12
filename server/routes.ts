@@ -87,6 +87,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('Created default user:', user.id);
         
+        // Create default upgrades
+        const defaultUpgrades = [
+          {
+            name: "Tap Power",
+            description: "Increase points per tap",
+            cost: 100,
+            level: 1,
+            maxLevel: 10,
+            tapBonus: 25,
+            hourlyBonus: 0,
+            requiredLevel: 1
+          },
+          {
+            name: "Energy Boost",
+            description: "Increase maximum energy",
+            cost: 150,
+            level: 1,
+            maxLevel: 10,
+            tapBonus: 0,
+            hourlyBonus: 0,
+            requiredLevel: 1
+          },
+          {
+            name: "Auto Collector",
+            description: "Earn points automatically",
+            cost: 250,
+            level: 1,
+            maxLevel: 15,
+            tapBonus: 0,
+            hourlyBonus: 50,
+            requiredLevel: 2
+          }
+        ];
+
+        for (const upgradeData of defaultUpgrades) {
+          await storage.createUpgrade(upgradeData);
+        }
+
         // Create a default character for the new user
         const defaultCharacter = await storage.createCharacter({
           name: "Luna",
@@ -898,6 +936,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = req.files as Express.Multer.File[];
       const { characterId, userId, processOptions } = req.body;
 
+      console.log('Upload request received:', { 
+        filesCount: files?.length, 
+        characterId, 
+        userId,
+        bodyKeys: Object.keys(req.body)
+      });
+
       if (!files || files.length === 0) {
         return res.status(400).json({ error: "No files uploaded" });
       }
@@ -906,13 +951,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const file of files) {
         try {
+          console.log('Processing file:', file.originalname, 'Size:', file.size);
+          
           // Process image with Sharp if options provided
           let processedPath = file.path;
+          let finalFilename = file.filename;
+          
           if (processOptions) {
             try {
               const options = JSON.parse(processOptions);
               const processedFilename = 'processed-' + file.filename;
               processedPath = path.join(uploadDir, processedFilename);
+              finalFilename = processedFilename;
 
               let sharpProcessor = sharp(file.path);
 
@@ -943,17 +993,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (processError) {
               console.warn('Image processing failed, using original:', processError);
               processedPath = file.path;
+              finalFilename = file.filename;
             }
           }
 
+          // Ensure file exists and get its stats
+          const fileStats = await fs.stat(processedPath);
+          const urlPath = `/uploads/${finalFilename}`;
+
           // Save to database
           const mediaFile = {
-            filename: path.basename(processedPath),
+            filename: finalFilename,
             originalName: file.originalname,
             mimeType: file.mimetype,
-            size: (await fs.stat(processedPath)).size,
-            path: `/uploads/${path.basename(processedPath)}`,
-            characterId: characterId || null,
+            size: fileStats.size,
+            path: urlPath,
+            url: urlPath,
+            characterId: characterId === 'unassigned' ? null : (characterId || null),
             uploadedBy: userId || 'anonymous',
             fileType: req.body.fileType || req.body.category || 'image',
             isNsfw: req.body.isNsfw === 'true',
@@ -964,17 +1020,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isWheelReward: req.body.isWheelReward === 'true'
           };
 
-          const savedFile = await storage.uploadMedia({
-            ...mediaFile,
-            fileType: 'image',
-            url: mediaFile.path
-          });
+          console.log('Saving media file to database:', mediaFile);
+
+          const savedFile = await storage.uploadMedia(mediaFile);
           uploadedFiles.push(savedFile);
+          
+          console.log('Successfully saved file:', savedFile.id);
         } catch (fileError) {
           console.error('Error processing file:', file.originalname, fileError);
           // Continue with next file instead of failing completely
         }
       }
+
+      console.log('Upload completed. Files processed:', uploadedFiles.length);
 
       res.json({
         success: true,
@@ -1256,9 +1314,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const filename = req.params.filename;
     const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
 
+    console.log('Media request for:', filename, 'Path:', filePath);
+
     if (fsSync.existsSync(filePath)) {
-      res.sendFile(filePath);
+      // Set proper content type
+      const ext = path.extname(filename).toLowerCase();
+      const contentType = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+      }[ext] || 'application/octet-stream';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.sendFile(path.resolve(filePath));
     } else {
+      console.warn('File not found:', filePath);
       res.status(404).json({ error: 'File not found' });
     }
   });

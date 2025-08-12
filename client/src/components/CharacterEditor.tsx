@@ -55,7 +55,7 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
   const [customGreeting, setCustomGreeting] = useState("");
   const [customResponse, setCustomResponse] = useState("");
   const [triggerWord, setTriggerWord] = useState("");
-  
+
   const queryClient = useQueryClient();
 
   // Fetch media files for avatars
@@ -151,7 +151,7 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
     mutationFn: async (data: CharacterEditForm) => {
       const method = isEditing ? "PATCH" : "POST";
       const endpoint = isEditing ? `/api/characters/${character?.id}` : "/api/characters";
-      
+
       try {
         const response = await apiRequest(method, endpoint, data);
         return await response.json();
