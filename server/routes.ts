@@ -1277,6 +1277,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/characters/:id", async (req, res) => {
+    try {
+      console.log(`Updating character ${req.params.id} with:`, req.body);
+
+      const updateData = {
+        ...req.body,
+        moodDistribution: req.body.moodDistribution || {
+          normal: 70,
+          happy: 20,
+          flirty: 10,
+          playful: 0,
+          mysterious: 0,
+          shy: 0,
+        },
+        customTriggerWords: req.body.customTriggerWords || [],
+        customGreetings: req.body.customGreetings || [],
+        customResponses: req.body.customResponses || [],
+      };
+
+      const character = await storage.updateCharacter(req.params.id, updateData);
+      if (!character) {
+        return res.status(404).json({ error: "Character not found" });
+      }
+      res.json(character);
+    } catch (error) {
+      console.error('Character update error:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.put("/api/character/:id", async (req, res) => {
     try {
       console.log(`PUT updating character ${req.params.id} with:`, req.body);

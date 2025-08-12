@@ -19,6 +19,7 @@ import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";
 import FloatingHearts from "@/components/FloatingHearts";
 import InGameAIControls from "@/components/InGameAIControls";
+import MistralDebugger from "@/components/MistralDebugger";
 import { 
   Settings, 
   Heart, 
@@ -60,6 +61,7 @@ export default function Game() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAIControls, setShowAIControls] = useState(false);
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
+  const [showDebugger, setShowDebugger] = useState(false);
   const [heartTriggers, setHeartTriggers] = useState<Array<{ amount: number; x: number; y: number }>>([]);
   const { toast } = useToast();
 
@@ -302,6 +304,13 @@ export default function Game() {
                   title="Admin Panel"
                 >
                   <Shield className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => setShowDebugger(true)}
+                  className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg flex items-center justify-center p-0"
+                  title="AI Debugger"
+                >
+                  <Brain className="w-4 h-4" />
                 </Button>
               </div>
             )}
@@ -590,6 +599,11 @@ export default function Game() {
         setShowCharacterCreation={setShowCharacterCreation}
       />
 
+      <MistralDebugger 
+        isOpen={showDebugger} 
+        onClose={() => setShowDebugger(false)} 
+      />
+
       <WheelModal
         isOpen={showWheelModal}
         onClose={() => setShowWheelModal(false)}
@@ -615,6 +629,8 @@ export default function Game() {
 
       {/* Floating Hearts Animation */}
       <FloatingHearts triggers={heartTriggers} />
+
+      <Toaster />
     </div>
   );
 }

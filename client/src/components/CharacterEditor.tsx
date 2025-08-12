@@ -18,7 +18,7 @@ import { toast } from "react-hot-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Character } from "@shared/schema";
 
-const MOCK_USER_ID = "mock-user-id";
+const MOCK_USER_ID = "default-player";
 
 // Extended character schema for editing
 const characterEditSchema = insertCharacterSchema.extend({
@@ -155,7 +155,7 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
       const endpoint = isEditing ? `/api/characters/${character?.id}` : "/api/characters";
 
       try {
-        const response = await apiRequest(method, endpoint, data);
+        const response = await apiRequest(endpoint, method, data);
         return await response.json();
       } catch (error) {
         console.error("Character operation error:", error);
