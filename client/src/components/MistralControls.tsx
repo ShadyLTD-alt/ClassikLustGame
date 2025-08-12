@@ -23,7 +23,18 @@ export default function MistralControls() {
   // Toggle MistralAI mutation
   const toggleMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      const response = await apiRequest("/api/admin/mistral/toggle", "POST", { enabled });
+      const response = await fetch("/api/admin/mistral/toggle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ enabled })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -45,7 +56,18 @@ export default function MistralControls() {
   // Test connection mutation
   const testMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("/api/admin/mistral/test", "POST", {});
+      const response = await fetch("/api/admin/mistral/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({})
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -53,6 +75,13 @@ export default function MistralControls() {
         title: data.success ? "Connection Successful" : "Connection Failed",
         description: data.message,
         variant: data.success ? "default" : "destructive"
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Test Failed", 
+        description: error.message, 
+        variant: "destructive" 
       });
     }
   });
