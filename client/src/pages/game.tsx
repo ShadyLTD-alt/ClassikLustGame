@@ -91,28 +91,35 @@ export default function Game() {
     queryKey: ["/api/stats", MOCK_USER_ID],
   });
 
-  // Fetch current settings with a proper queryFn to resolve the overload error
+  // Fetch current settings and sync with user data
   useQuery({
-    queryKey: ['/api/settings'],
-    queryFn: () => apiRequest('GET', '/api/settings'),
+    queryKey: ['/api/settings', MOCK_USER_ID],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/settings');
+      return await response.json();
+    },
     onSuccess: (data: any) => {
       setLocalSettings(prev => ({
         ...prev,
-        nsfwEnabled: data.user?.nsfwEnabled || false
+        nsfwEnabled: user?.nsfwEnabled || false
       }));
-    }
+    },
+    enabled: !!user
   });
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
-    mutationFn: (newSettings: typeof localSettings) => 
-      apiRequest('PUT', '/api/settings', {
-        userSettings: {
-          nsfwEnabled: newSettings.nsfwEnabled
-        }
-      }),
+    mutationFn: async (newSettings: typeof localSettings) => {
+      // Update user NSFW setting
+      if (newSettings.nsfwEnabled !== localSettings.nsfwEnabled) {
+        const response = await apiRequest('POST', `/api/settings/toggle-nsfw/${MOCK_USER_ID}`);
+        return await response.json();
+      }
+      return { success: true };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user", MOCK_USER_ID] });
       toast({
         title: "Settings Saved",
         description: "Your preferences have been updated successfully.",

@@ -3,6 +3,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes float-up {
+  0% { 
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+  100% { 
+    opacity: 0;
+    transform: translateY(-50px) scale(0.5);
+  }
+}
+
+@keyframes tap-effect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up 1s ease-out forwards;
+}
+
+.tap-effect {
+  animation: tap-effect 0.2s ease-out;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ff6b9d, #c44569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @layer base {
   :root {
     --background: 210 20% 98%;

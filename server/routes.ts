@@ -102,6 +102,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/characters", async (req, res) => {
+    try {
+      const characterData = insertCharacterSchema.parse(req.body);
+      const character = await storage.createCharacter(characterData);
+      res.json(character);
+    } catch (error) {
+      console.error('Character creation error:', error);
+      res.status(400).json({ error: "Invalid character data" });
+    }
+  });
+
   app.post("/api/character", async (req, res) => {
     try {
       const characterData = insertCharacterSchema.parse(req.body);
@@ -442,6 +453,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/settings", async (req, res) => {
+    try {
+      await storage.updateGameSettings(req.body);
+      const settings = await storage.getGameSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/settings/toggle-nsfw/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
@@ -454,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nsfwEnabled: !user.nsfwEnabled
       });
 
-      res.json({ nsfwEnabled: updatedUser?.nsfwEnabled });
+      res.json({ nsfwEnabled: updatedUser?.nsfwEnabled, success: true });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
