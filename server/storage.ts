@@ -36,6 +36,7 @@ export interface IStorage {
   // Upgrade management
   getUpgrade(id: string): Promise<Upgrade | undefined>;
   getUserUpgrades(userId: string): Promise<Upgrade[]>;
+  getAllUpgrades(): Promise<Upgrade[]>;
   createUpgrade(upgrade: InsertUpgrade): Promise<Upgrade>;
   updateUpgrade(id: string, updates: Partial<Upgrade>): Promise<Upgrade | undefined>;
 

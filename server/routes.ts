@@ -334,11 +334,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat/send", async (req, res) => {
     try {
-      // Add isFromUser field to request body since it's always true for user messages
-      const messageData = insertChatMessageSchema.parse({
-        ...req.body,
+      // Ensure required fields are present and add isFromUser
+      const requestBody = {
+        userId: req.body.userId,
+        characterId: req.body.characterId || null,
+        message: req.body.message || '',
         isFromUser: true
-      });
+      };
+      
+      if (!requestBody.message.trim()) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+      
+      const messageData = insertChatMessageSchema.parse(requestBody);
       console.log('Chat send request:', messageData);
       
       const message = await storage.createChatMessage(messageData);
@@ -595,9 +603,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin upgrade management
   app.get("/api/admin/upgrades", async (req, res) => {
     try {
-      const upgrades = Array.from((storage as any).upgrades.values());
+      const upgrades = await storage.getAllUpgrades();
       res.json(upgrades);
     } catch (error) {
+      console.error('Admin upgrades error:', error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

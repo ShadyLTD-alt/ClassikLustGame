@@ -69,7 +69,7 @@ Keep your response concise and actionable.`;
     try {
       const response = await this.callMistralAPI(prompt, this.config.debugModel);
       return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Mistral debug assist error:', error);
       return 'Unable to get debug assistance at this time.';
     }
@@ -98,7 +98,7 @@ Respond in character with a natural, engaging message. Keep it conversational an
     try {
       const response = await this.callMistralAPI(prompt, this.config.model);
       return response.trim();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Mistral chat error:', error);
       return 'I understand! Thanks for talking with me.'; // Fallback
     }

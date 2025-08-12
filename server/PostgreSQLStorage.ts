@@ -291,23 +291,23 @@ export class PostgreSQLStorage implements IStorage {
   async uploadMedia(file: any): Promise<MediaFile> {
     const mediaFile: MediaFile = {
       id: crypto.randomUUID(),
-      filename: file.filename,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
-      size: file.size,
-      fileType: file.mimetype.startsWith('image/') ? 'image' : 'file',
-      url: `/uploads/${file.filename}`,
-      path: file.path,
-      characterId: null,
-      uploadedBy: 'system',
-      tags: [],
-      description: null,
-      isNsfw: false,
-      requiredLevel: 1,
-      chatSendChance: 5,
-      isVipOnly: false,
-      isEventOnly: false,
-      isWheelReward: false,
+      filename: file.filename || file.originalName || 'unknown',
+      originalName: file.originalName || file.originalname || 'unknown',
+      mimeType: file.mimeType || file.mimetype || 'application/octet-stream',
+      size: file.size || 0,
+      fileType: (file.mimeType || file.mimetype || '').startsWith('image/') ? 'image' : 'file',
+      url: file.url || `/uploads/${file.filename}`,
+      path: file.path || file.url || '',
+      characterId: file.characterId || null,
+      uploadedBy: file.uploadedBy || 'system',
+      tags: file.tags || [],
+      description: file.description || null,
+      isNsfw: file.isNsfw || false,
+      requiredLevel: file.requiredLevel || 1,
+      chatSendChance: file.chatSendChance || 5,
+      isVipOnly: file.isVipOnly || false,
+      isEventOnly: file.isEventOnly || false,
+      isWheelReward: file.isWheelReward || false,
       createdAt: new Date()
     };
     
@@ -326,6 +326,11 @@ export class PostgreSQLStorage implements IStorage {
   // Additional methods needed by routes
   async getAllUsers(): Promise<User[]> {
     const result = await db.select().from(schema.users);
+    return result;
+  }
+
+  async getAllUpgrades(): Promise<Upgrade[]> {
+    const result = await db.select().from(schema.upgrades);
     return result;
   }
 
