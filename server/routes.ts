@@ -9,7 +9,7 @@ import fsSync from "fs";
 import { storage } from "./storage";
 import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { MediaFile } from "@shared/types";
+import { MediaFile } from "@shared/schema";
 import { mistralService } from "./mistralService";
 
 // Configure multer for file uploads
@@ -165,26 +165,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Get all upgrades to find the one being purchased
-      const allUpgrades = await storage.getUpgrades();
-      const upgrade = allUpgrades.find(u => u.id === upgradeId);
+      // Get the specific upgrade being purchased
+      const upgrade = await storage.getUpgrade(upgradeId);
 
       if (!upgrade) {
         return res.status(404).json({ error: "Upgrade not found" });
       }
 
-      // Calculate current upgrade level and cost
-      const userUpgrades = user.upgrades || {};
-      const currentLevel = userUpgrades[upgradeId] || 0;
-      const nextLevel = currentLevel + 1;
-
       // Check if upgrade is at max level
-      if (nextLevel > upgrade.maxLevel) {
+      if (upgrade.level >= upgrade.maxLevel) {
         return res.status(400).json({ error: "Upgrade is already at maximum level" });
       }
 
       // Calculate cost for next level (cost increases with level)
-      const upgradeCost = Math.floor(upgrade.cost * Math.pow(1.5, currentLevel));
+      const upgradeCost = Math.floor(upgrade.cost * Math.pow(1.5, upgrade.level));
 
       console.log(`Upgrade purchase attempt: User has ${user.points} points, needs ${upgradeCost} points`);
 
@@ -196,43 +190,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Purchase upgrade - deduct points first
+      // Purchase upgrade - deduct points
       const newPoints = user.points - upgradeCost;
-      userUpgrades[upgradeId] = nextLevel;
+      await storage.updateUser(userId, { points: newPoints });
 
-      // Update user with new points and upgrade level
-      await storage.updateUser(userId, {
-        points: newPoints,
-        upgrades: userUpgrades
-      });
+      // Upgrade the specific upgrade
+      const upgradedUpgrade = await storage.upgradeUserUpgrade(userId, upgradeId);
 
-      // Recalculate user's tap bonus and hourly rate
-      let totalTapBonus = 1; // Base tap bonus
+      // Recalculate user's hourly rate from all upgrades
+      const allUserUpgrades = await storage.getUserUpgrades(userId);
       let totalHourlyBonus = 0;
 
-      for (const [upgradeId, level] of Object.entries(userUpgrades)) {
-        const upgradeData = allUpgrades.find(u => u.id === upgradeId);
-        if (upgradeData) {
-          totalTapBonus += upgradeData.tapBonus * level;
-          totalHourlyBonus += upgradeData.hourlyBonus * level;
-        }
+      for (const userUpgrade of allUserUpgrades) {
+        totalHourlyBonus += userUpgrade.hourlyBonus * userUpgrade.level;
       }
 
-      // Update user's bonuses
+      // Update user's hourly rate
       await storage.updateUser(userId, {
-        tapBonus: totalTapBonus,
         hourlyRate: totalHourlyBonus
       });
 
-      console.log(`Upgrade purchased successfully: ${upgrade.name} level ${nextLevel}`);
+      console.log(`Upgrade purchased successfully: ${upgrade.name} level ${upgradedUpgrade.level}`);
 
       res.json({ 
         success: true,
-        message: `${upgrade.name} upgraded to level ${nextLevel}!`,
+        message: `${upgrade.name} upgraded to level ${upgradedUpgrade.level}!`,
         newPoints: newPoints,
-        upgradeLevel: nextLevel,
+        upgradeLevel: upgradedUpgrade.level,
         cost: upgradeCost,
-        newTapBonus: totalTapBonus,
         newHourlyRate: totalHourlyBonus
       });
     } catch (error) {
@@ -279,10 +264,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createChatMessage(messageData);
 
       // Get character for personality context
-      const character = await storage.getCharacter(messageData.characterId);
+      const character = messageData.characterId ? await storage.getCharacter(messageData.characterId) : null;
       
       // Get recent conversation history
-      const recentMessages = await storage.getChatMessages(messageData.userId, messageData.characterId);
+      const recentMessages = await storage.getChatMessages(messageData.userId, messageData.characterId || undefined);
       const conversationHistory = recentMessages.slice(-10).map(msg => ({
         role: msg.isFromUser ? 'user' as const : 'assistant' as const,
         content: msg.message
@@ -296,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Using MistralAI for chat response');
           aiResponseText = await mistralService.generateChatResponse({
             message: messageData.message,
-            characterId: messageData.characterId,
+            characterId: messageData.characterId || '',
             conversationHistory,
             characterPersonality: character?.personality || character?.bio || 'friendly'
           });
@@ -313,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const aiResponse = await storage.createChatMessage({
         userId: messageData.userId,
-        characterId: messageData.characterId,
+        characterId: messageData.characterId || null,
         message: aiResponseText,
         isFromUser: false
       });
