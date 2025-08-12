@@ -234,9 +234,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Check energy
-      if (user.energy <= 0) {
-        return res.status(400).json({ error: "No energy remaining" });
+      // Get current stats for energy check
+      const stats = await storage.getUserStats(userId);
+      
+      // Check energy (require 5 energy per tap)
+      const energyCost = 5;
+      if (stats.currentEnergy < energyCost) {
+        return res.status(400).json({ error: "Not enough energy" });
       }
 
       // Calculate points per tap (base 125 + upgrades)
@@ -245,20 +249,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pointsPerTap = 125 + tapBonus;
 
       const newPoints = user.points + pointsPerTap;
-      const newEnergy = Math.max(0, user.energy - 1);
+      const newEnergy = Math.max(0, stats.currentEnergy - energyCost);
 
-      // Update user
+      // Update user points only
       await storage.updateUser(userId, {
-        points: newPoints,
-        energy: newEnergy
+        points: newPoints
       });
 
-      // Update stats
-      const stats = await storage.getUserStats(userId);
+      // Update stats including energy consumption
       await storage.updateUserStats(userId, {
         totalTaps: stats.totalTaps + 1,
         totalEarned: stats.totalEarned + pointsPerTap,
-        totalPoints: newPoints
+        totalPoints: newPoints,
+        currentEnergy: newEnergy
       });
 
       res.json({
@@ -266,7 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newPoints: newPoints,
         newEnergy: newEnergy,
         points: newPoints,
-        energy: newEnergy
+        energy: newEnergy,
+        energyConsumed: energyCost
       });
     } catch (error) {
       console.error('Tap error:', error);

@@ -269,13 +269,13 @@ export default function Game() {
               <div className="flex items-center space-x-1">
                 <Gem className="w-4 h-4 text-green-400" />
                 <span className="text-white text-sm">Lust Gems: </span>
-                <span className="text-white font-bold">{stats?.totalPoints ? Math.floor(stats.totalPoints / 100) : "24"}</span>
+                <span className="text-white font-bold">{user?.lustGems || "0"}</span>
               </div>
             </div>
             <div className="flex items-center justify-end space-x-1 mt-1">
               <Zap className="w-4 h-4 text-yellow-400" />
               <span className="text-white text-sm">Energy: </span>
-              <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "5500"}</span>
+              <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "4500"}</span>
             </div>
 
             {/* Admin Buttons - Only visible to admin users */}

@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   hourlyRate: integer("hourlyRate").notNull().default(0),
   isAdmin: boolean("isAdmin").notNull().default(false),
   nsfwEnabled: boolean("nsfwEnabled").notNull().default(false),
+  lustGems: integer("lustGems").notNull().default(0),
   createdAt: timestamp("createdAt").notNull().default(sql`now()`)
 });
 

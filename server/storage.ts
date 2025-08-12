@@ -150,6 +150,7 @@ export class MemStorage implements IStorage {
       hourlyRate: 16933,
       isAdmin: true,
       nsfwEnabled: false,
+      lustGems: 0,
       createdAt: new Date()
     };
     this.users.set(mockUser.id, mockUser);
