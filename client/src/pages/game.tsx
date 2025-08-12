@@ -18,6 +18,7 @@ import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";
 import FloatingHearts from "@/components/FloatingHearts";
+import InGameAIControls from "@/components/InGameAIControls";
 import { 
   Settings, 
   Heart, 
@@ -36,7 +37,8 @@ import {
   Shield,
   Eye,
   Save,
-  BarChart3
+  BarChart3,
+  Brain
 } from "lucide-react";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
@@ -51,11 +53,12 @@ export default function Game() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  
+
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showAIControls, setShowAIControls] = useState(false);
   const [heartTriggers, setHeartTriggers] = useState<Array<{ amount: number; x: number; y: number }>>([]);
   const { toast } = useToast();
 
@@ -280,7 +283,7 @@ export default function Game() {
             {/* Admin Buttons - Only visible to admin users */}
             {isCurrentUserAdmin(user) && (
               <div className="absolute -top-2 -right-2 flex gap-1">
-                
+
                 <Button
                   onClick={() => setShowAdminPanel(true)}
                   className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg flex items-center justify-center p-0"
@@ -327,6 +330,16 @@ export default function Game() {
           >
             <Star className="w-6 h-6" />
             <span className="text-xs mt-1">Power Up</span>
+          </Button>
+
+          {/* AI Control Panel Button */}
+          <Button
+            onClick={() => setShowAIControls(true)}
+            className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg flex flex-col items-center justify-center"
+            title="AI Controls"
+          >
+            <Brain className="w-6 h-6" />
+            <span className="text-xs mt-1">AI</span>
           </Button>
         </div>
 
@@ -561,7 +574,8 @@ export default function Game() {
       <AdminPanel
         isOpen={showAdminPanel}
         onClose={() => setShowAdminPanel(false)}
-        user={user}
+        showCharacterCreation={showCharacterCreation}
+        setShowCharacterCreation={setShowCharacterCreation}
       />
 
       <WheelModal
@@ -582,7 +596,10 @@ export default function Game() {
         userId={MOCK_USER_ID}
       />
 
-      
+      <InGameAIControls
+        isOpen={showAIControls}
+        onClose={() => setShowAIControls(false)}
+      />
 
       {/* Floating Hearts Animation */}
       <FloatingHearts triggers={heartTriggers} />
