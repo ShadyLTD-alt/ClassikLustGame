@@ -14,7 +14,7 @@ interface ImageManagerProps {
   onClose?: () => void;
 }
 
-export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
+export default function ImageManager({ isOpen = true, onClose }: ImageManagerProps) {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<string>("");
   const [uploadCategory, setUploadCategory] = useState<string>("character");
@@ -136,7 +136,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full h-full space-y-6 p-4">
       {/* Upload Section */}
       <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
         <CardHeader>

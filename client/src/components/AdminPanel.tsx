@@ -687,17 +687,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Media Tab - Image Manager */}
             <TabsContent value="media" className="space-y-6">
-              <Card className="bg-slate-800/50 border-slate-600">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Image className="w-5 h-5" />
-                    Image Management System
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ImageManager isOpen={true} onClose={() => {}} />
-                </CardContent>
-              </Card>
+              <div className="w-full h-full">
+                <ImageManager isOpen={true} onClose={() => {}} />
+              </div>
             </TabsContent>
 
             {/* AI Chat Tab */}
