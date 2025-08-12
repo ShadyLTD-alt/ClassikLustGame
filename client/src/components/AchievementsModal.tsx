@@ -317,8 +317,9 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                                   });
                                   
                                   if (response.ok) {
-                                    // Refresh achievements data
-                                    window.location.reload();
+                                    // Show success message without page reload
+                                    console.log('Achievement claimed successfully');
+                                    // Note: Achievement data will update when this modal is reopened
                                   } else {
                                     console.error('Failed to claim achievement');
                                   }
@@ -395,8 +396,9 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                                 });
                                 
                                 if (response.ok) {
-                                  // Refresh tasks data
-                                  window.location.reload();
+                                  // Show success message without page reload
+                                  console.log('Task reward claimed successfully');
+                                  // Note: Task data will update when this modal is reopened
                                 } else {
                                   console.error('Failed to claim task reward');
                                 }

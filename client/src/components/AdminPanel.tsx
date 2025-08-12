@@ -688,7 +688,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             {/* Media Tab - Image Manager */}
             <TabsContent value="media" className="space-y-6">
               <div className="min-h-[600px]">
-                <ImageManager isOpen={isOpen} onClose={() => {}} />
+                <ImageManager isOpen={true} onClose={() => {}} />
               </div>
             </TabsContent>
 
