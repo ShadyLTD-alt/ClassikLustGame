@@ -1,441 +1,329 @@
-import { useState, useRef, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Zap, Gift, Coins, Heart, Star, Crown, Timer } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Coins, Gift, Heart, Star, Trophy, Zap } from "lucide-react";
 
-interface WheelReward {
-  id?: number; // Added id for saving settings
-  type: string;
-  min?: number;
-  max?: number;
+interface WheelPrize {
+  id: string;
+  name: string;
+  type: 'points' | 'energy' | 'character' | 'gems' | 'special';
+  value: number;
   probability: number;
-  icon: string;
   color: string;
-}
-
-interface SpinResult {
-  reward: string;
-  amount: number;
-  message: string;
+  icon: string;
+  timesWon: number;
 }
 
 interface WheelGameProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-  userId?: string;
+  isOpen: boolean;
+  onClose: () => void;
+  userId: string;
 }
 
-export default function WheelGame({ isOpen, onClose, userId = "mock-user-id" }: WheelGameProps) {
+const DEFAULT_PRIZES: WheelPrize[] = [
+  {
+    id: '1',
+    name: '100 LP',
+    type: 'points',
+    value: 100,
+    probability: 30,
+    color: '#4F46E5',
+    icon: '💰',
+    timesWon: 0
+  },
+  {
+    id: '2', 
+    name: '50 LP',
+    type: 'points',
+    value: 50,
+    probability: 25,
+    color: '#059669',
+    icon: '🪙',
+    timesWon: 0
+  },
+  {
+    id: '3',
+    name: '25 Energy',
+    type: 'energy',
+    value: 25,
+    probability: 20,
+    color: '#DC2626',
+    icon: '⚡',
+    timesWon: 0
+  },
+  {
+    id: '4',
+    name: '5 Gems',
+    type: 'gems',
+    value: 5,
+    probability: 15,
+    color: '#7C3AED',
+    icon: '💎',
+    timesWon: 0
+  },
+  {
+    id: '5',
+    name: 'Character Unlock',
+    type: 'character',
+    value: 1,
+    probability: 8,
+    color: '#EA580C',
+    icon: '👤',
+    timesWon: 0
+  },
+  {
+    id: '6',
+    name: 'Jackpot!',
+    type: 'special',
+    value: 1000,
+    probability: 2,
+    color: '#FBBF24',
+    icon: '🎉',
+    timesWon: 0
+  }
+];
+
+export default function WheelGame({ isOpen, onClose, userId }: WheelGameProps) {
+  const [prizes, setPrizes] = useState<WheelPrize[]>(DEFAULT_PRIZES);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
-  const [wheelRotation, setWheelRotation] = useState(0);
-  const [timeUntilNext, setTimeUntilNext] = useState(0);
-  const wheelRef = useRef<HTMLDivElement>(null);
-
+  const [selectedPrize, setSelectedPrize] = useState<WheelPrize | null>(null);
+  const [spinResult, setSpinResult] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState("");
+  const [activeTab, setActiveTab] = useState("spin");
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch user data for current points/energy
-  const { data: user } = useQuery({
-    queryKey: ['/api/user', userId],
-    queryFn: () => fetch(`/api/user/${userId}`).then(res => res.json())
-  });
-
-  // Fetch last spin time
-  const { data: lastSpinData } = useQuery({
-    queryKey: ['/api/wheel/last-spin', userId],
-    queryFn: () => fetch(`/api/wheel/last-spin/${userId}`).then(res => res.json())
-  });
-
-  // Fetch game settings for wheel rewards
-  const { data: settings, isLoading: isLoadingSettings } = useQuery({
-    queryKey: ['/api/settings'],
-    queryFn: () => fetch('/api/settings').then(res => res.json())
-  });
-
-  // Initialize wheelRewards from settings or use default
-  const [wheelRewards, setWheelRewards] = useState<WheelReward[]>(settings?.wheelRewards || [
-    { type: 'coins', min: 100, max: 500, probability: 0.3, icon: '🪙', color: 'bg-yellow-500' },
-    { type: 'energy', min: 10, max: 30, probability: 0.25, icon: '⚡', color: 'bg-blue-500' },
-    { type: 'coins', min: 50, max: 200, probability: 0.2, icon: '💰', color: 'bg-green-500' },
-    { type: 'energy', min: 5, max: 15, probability: 0.15, icon: '🔋', color: 'bg-cyan-500' },
-    { type: 'character', min: 0, max: 0, probability: 0.05, icon: '👸', color: 'bg-purple-500' },
-    { type: 'coins', min: 25, max: 100, probability: 0.05, icon: '🎁', color: 'bg-pink-500' }
-  ]);
-
-  // Update local state when settings are fetched
-  useEffect(() => {
-    if (settings?.wheelRewards) {
-      setWheelRewards(settings.wheelRewards.map((reward: any, index: number) => ({
-        id: reward.id || index, // Ensure rewards have an ID for saving
-        ...reward
-      })));
-    }
-  }, [settings]);
-
-  // Mutation to save wheel settings
-  const saveSettingsMutation = useMutation({
-    mutationFn: (updatedRewards: WheelReward[]) => apiRequest('/api/settings', {
-      method: 'PATCH',
-      body: { wheelRewards: updatedRewards }
-    }),
-    onSuccess: () => {
-      toast({ title: "Success", description: "Wheel settings saved successfully!" });
-      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to save settings", variant: "destructive" });
-    }
-  });
-
-  // Spin wheel mutation
-  const spinMutation = useMutation({
-    mutationFn: () => apiRequest('/api/wheel/spin', { method: 'POST', body: { userId } }),
-    onSuccess: (result: SpinResult) => {
-      setSpinResult(result);
-      queryClient.invalidateQueries({ queryKey: ['/api/user', userId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/wheel/last-spin', userId] });
-
-      // Display a floating notification for the reward
-      toast({
-        title: "Reward Gained!",
-        description: result.message,
-        duration: 3000, // Short duration for floating notification
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Spin Failed",
-        description: error.message || "Could not spin the wheel",
-        variant: "destructive"
-      });
-      setIsSpinning(false); // Ensure spinning state is reset on error
-    }
+  // Get user stats to check wheel availability
+  const { data: stats } = useQuery({
+    queryKey: ["/api/stats", userId],
+    enabled: isOpen,
   });
 
   // Calculate time until next spin
   useEffect(() => {
-    if (!lastSpinData?.lastSpin) return;
-
-    const lastSpinTime = new Date(lastSpinData.lastSpin).getTime();
-    const now = Date.now();
-    const timeDiff = now - lastSpinTime;
-    const hoursLeft = 24 - (timeDiff / (1000 * 60 * 60));
-
-    if (hoursLeft > 0) {
-      setTimeUntilNext(hoursLeft);
-
-      const interval = setInterval(() => {
-        const currentTime = Date.now();
-        const newTimeDiff = currentTime - lastSpinTime;
-        const newHoursLeft = 24 - (newTimeDiff / (1000 * 60 * 60));
-
-        if (newHoursLeft <= 0) {
-          setTimeUntilNext(0);
-          clearInterval(interval);
-        } else {
-          setTimeUntilNext(newHoursLeft);
-        }
-      }, 60000); // Update every minute
-
-      return () => clearInterval(interval);
-    } else {
-      setTimeUntilNext(0);
+    if (!stats || !('lastWheelSpin' in stats) || !stats.lastWheelSpin) {
+      setTimeLeft("");
+      return;
     }
-  }, [lastSpinData]);
 
-  const canSpin = timeUntilNext <= 0;
+    const updateTimer = () => {
+      const lastSpin = new Date(stats.lastWheelSpin);
+      const nextSpin = new Date(lastSpin.getTime() + 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const diff = nextSpin.getTime() - now.getTime();
 
-  const handleSpin = async () => {
-    if (!canSpin || isSpinning || spinMutation.isPending) return;
+      if (diff <= 0) {
+        setTimeLeft("");
+        return;
+      }
 
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [stats]);
+
+  const canSpin = !stats || !('lastWheelSpin' in stats) || !stats.lastWheelSpin || timeLeft === "";
+
+  const spinMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/wheel/spin", { userId });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const wonPrize = prizes.find(p => p.id === data.prizeId) || prizes[0];
+      setSelectedPrize(wonPrize);
+      setSpinResult(data.message);
+      
+      // Update prize win count
+      setPrizes(prev => prev.map(p => 
+        p.id === wonPrize.id ? { ...p, timesWon: p.timesWon + 1 } : p
+      ));
+
+      queryClient.invalidateQueries({ queryKey: ["/api/user", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats", userId] });
+      
+      setTimeout(() => {
+        setIsSpinning(false);
+        toast({
+          title: "🎉 Congratulations!",
+          description: `You won ${wonPrize.name}!`,
+        });
+      }, 3000);
+    },
+    onError: (error: any) => {
+      setIsSpinning(false);
+      toast({
+        title: "Spin Failed",
+        description: error.message || "Something went wrong!",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSpin = () => {
+    if (!canSpin || isSpinning) return;
+    
     setIsSpinning(true);
+    setSelectedPrize(null);
     setSpinResult(null);
-
-    // Animate wheel
-    const spins = 5; // Number of full rotations
-    const randomAngle = Math.random() * 360;
-    const segmentCount = wheelRewards.length;
-    const segmentAngle = 360 / segmentCount;
-
-    // Determine a target segment index (this would ideally be based on the API response)
-    // For now, we'll just pick a random segment to land on for animation purposes
-    const targetSegmentIndex = Math.floor(Math.random() * segmentCount);
-    const targetAngle = targetSegmentIndex * segmentAngle;
-
-    // Calculate the final rotation to land on the center of the target segment
-    // We add a bit of randomness within the segment to make it less predictable
-    const finalSegmentRotation = targetAngle + (Math.random() * segmentAngle) - (segmentAngle / 2);
-
-    const totalRotation = wheelRotation + (spins * 360) + finalSegmentRotation;
-
-    setWheelRotation(totalRotation);
-
-    // Wait for animation to complete, then trigger API call
-    // The duration of the transition is 3s, so we wait a bit longer
-    setTimeout(() => {
-      spinMutation.mutate();
-      setIsSpinning(false); // Reset spinning state after the mutation is called
-    }, 3200); // Slightly longer than the CSS transition for safety
+    
+    spinMutation.mutate();
   };
 
-  const formatTimeRemaining = (hours: number) => {
-    if (hours <= 0) return "Ready to spin!";
+  const WheelDisplay = () => (
+    <div className="relative w-80 h-80 mx-auto">
+      {/* Wheel Container */}
+      <div 
+        className={`w-full h-full rounded-full border-8 border-yellow-400 relative overflow-hidden transition-transform duration-3000 ${isSpinning ? 'animate-spin' : ''}`}
+        style={{
+          background: `conic-gradient(${prizes.map((prize, index) => 
+            `${prize.color} ${(index * 360) / prizes.length}deg ${((index + 1) * 360) / prizes.length}deg`
+          ).join(', ')})`
+        }}
+      >
+        {/* Prize Sections */}
+        {prizes.map((prize, index) => (
+          <div
+            key={prize.id}
+            className="absolute w-full h-full flex items-center justify-center text-white font-bold text-sm"
+            style={{
+              transform: `rotate(${(index * 360) / prizes.length}deg)`,
+              transformOrigin: 'center',
+            }}
+          >
+            <div className="flex flex-col items-center justify-center transform -rotate-90">
+              <span className="text-2xl">{prize.icon}</span>
+              <span className="text-xs mt-1">{prize.name}</span>
+            </div>
+          </div>
+        ))}
+        
+        {/* Center Hub */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-yellow-400 rounded-full border-4 border-white flex items-center justify-center">
+          <Star className="w-8 h-8 text-yellow-600" />
+        </div>
+      </div>
+      
+      {/* Pointer */}
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
+        <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-red-500"></div>
+      </div>
+    </div>
+  );
 
-    const h = Math.floor(hours);
-    const m = Math.floor((hours - h) * 60);
+  const PrizeStats = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        {prizes.map((prize) => (
+          <Card key={prize.id} className="bg-gray-800/50 border-gray-600">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl mb-2">{prize.icon}</div>
+              <div className="text-white font-medium text-sm">{prize.name}</div>
+              <div className="text-gray-400 text-xs">
+                {prize.probability}% chance
+              </div>
+              <Badge variant="secondary" className="mt-2">
+                Won {prize.timesWon} times
+              </Badge>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 
-    if (h > 0) {
-      return `${h}h ${m}m remaining`;
-    } else if (m > 0) {
-      return `${m}m remaining`;
-    } else {
-      return "Less than a minute remaining";
-    }
-  };
-
-  const getRewardIcon = (type: string) => {
-    switch (type) {
-      case 'coins': return <Coins className="h-4 w-4 text-yellow-500" />;
-      case 'energy': return <Zap className="h-4 w-4 text-blue-500" />;
-      case 'character': return <Crown className="h-4 w-4 text-purple-500" />;
-      default: return <Gift className="h-4 w-4 text-pink-500" />;
-    }
-  };
-
-  // Handler to update wheel rewards locally
-  const handleRewardChange = (index: number, field: keyof WheelReward, value: any) => {
-    const newRewards = [...wheelRewards];
-    // Ensure min/max are numbers, probability is a number between 0 and 1
-    if (field === 'min' || field === 'max') {
-      newRewards[index][field] = value === '' ? undefined : parseInt(value, 10) || 0;
-    } else if (field === 'probability') {
-      newRewards[index][field] = parseFloat(value) || 0;
-    } else {
-      newRewards[index][field] = value;
-    }
-    setWheelRewards(newRewards);
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Daily Wheel Spin</h2>
-        <p className="text-muted-foreground">
-          Spin the wheel once per day for amazing rewards!
-        </p>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Wheel */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Gift className="h-5 w-5" />
-                Reward Wheel
-              </CardTitle>
-              <CardDescription>
-                Spin to win coins, energy, or even rare characters!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center space-y-6">
-              {/* Wheel Container */}
-              <div className="relative">
-                {/* Pointer */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-                  <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-foreground" />
-                </div>
-
-                {/* Wheel */}
-                <div
-                  ref={wheelRef}
-                  className="w-64 h-64 rounded-full border-4 border-border relative overflow-hidden"
-                  style={{
-                    transform: `rotate(${wheelRotation}deg)`,
-                    transition: isSpinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
-                  }}
-                >
-                  {wheelRewards.map((reward, index) => {
-                    const angle = (360 / wheelRewards.length) * index;
-                    const nextAngle = (360 / wheelRewards.length) * (index + 1);
-
-                    // Calculate clip path for the segment
-                    const startAngleRad = angle * (Math.PI / 180);
-                    const endAngleRad = nextAngle * (Math.PI / 180);
-                    const startX = 0.5 + 0.5 * Math.cos(startAngleRad);
-                    const startY = 0.5 + 0.5 * Math.sin(startAngleRad);
-                    const endX = 0.5 + 0.5 * Math.cos(endAngleRad);
-                    const endY = 0.5 + 0.5 * Math.sin(endAngleRad);
-
-                    return (
-                      <div
-                        key={reward.id || index} // Use reward.id if available
-                        className={`absolute w-full h-full origin-center ${reward.color?.startsWith('bg-') ? reward.color : ''}`}
-                        style={{
-                          transform: `rotate(${angle}deg) skewX(${90 - (nextAngle - angle)}deg)`,
-                          background: reward.color?.startsWith('bg-') ? '' : reward.color, // Use background directly if not a Tailwind class
-                          clipPath: `polygon(50% 50%, ${startX * 100}% ${startY * 100}%, ${endX * 100}% ${endY * 100}%)`
-                        }}
-                      >
-                        <div
-                          className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg"
-                          style={{ transform: `rotate(${(nextAngle - angle) / 2}deg) skewX(${ (nextAngle - angle) - 90}deg)` }}
-                        >
-                          <span className="text-2xl">{reward.icon}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl bg-gradient-to-br from-purple-900 to-indigo-900 text-white border-purple-500/30 max-h-[90vh] overflow-y-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
+            🎡 Lucky Wheel
+          </CardTitle>
+          <Button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 p-0"
+            variant="ghost"
+          >
+            ×
+          </Button>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800/50">
+              <TabsTrigger value="spin" className="text-white data-[state=active]:bg-purple-600">
+                🎯 Spin
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="text-white data-[state=active]:bg-purple-600">
+                📊 Stats
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="spin" className="space-y-6">
+              <WheelDisplay />
+              
               {/* Spin Button */}
               <div className="text-center space-y-4">
+                {timeLeft && (
+                  <div className="text-yellow-400">
+                    Next spin available in: {timeLeft}
+                  </div>
+                )}
+                
                 <Button
                   onClick={handleSpin}
-                  disabled={!canSpin || isSpinning || spinMutation.isPending}
-                  size="lg"
-                  className="px-8 py-6 text-lg font-bold"
+                  disabled={!canSpin || isSpinning}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-full text-lg"
                 >
-                  {isSpinning ? "Spinning..." : canSpin ? "SPIN NOW!" : "Not Available"}
-                </Button>
-
-                {!canSpin && (
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Timer className="h-4 w-4" />
-                      <span>{formatTimeRemaining(timeUntilNext)}</span>
+                  {isSpinning ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Spinning...
                     </div>
-                    <Progress
-                      value={Math.max(0, Math.min(100, ((24 - timeUntilNext) / 24) * 100))}
-                      className="mt-2 w-64"
-                    />
+                  ) : !canSpin ? (
+                    "Wheel on Cooldown"
+                  ) : (
+                    "🎯 SPIN THE WHEEL!"
+                  )}
+                </Button>
+                
+                {spinResult && (
+                  <div className="bg-green-600/20 border border-green-500 rounded-lg p-4">
+                    <div className="text-green-400 font-bold">{spinResult}</div>
+                    {selectedPrize && (
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <span className="text-2xl">{selectedPrize.icon}</span>
+                        <span className="text-white">{selectedPrize.name}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-
-              {/* Spin Result */}
-              {spinResult && (
-                <Card className="w-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-300">
-                  <CardContent className="pt-6 text-center">
-                    <div className="space-y-2">
-                      <div className="text-2xl">🎉</div>
-                      <h3 className="text-xl font-bold">Congratulations!</h3>
-                      <p className="text-lg">{spinResult.message}</p>
-                      <div className="flex items-center justify-center gap-2">
-                        {getRewardIcon(spinResult.reward)}
-                        <span className="font-bold">
-                          {spinResult.amount > 0 ? `+${spinResult.amount}` : ''} {spinResult.reward}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Side Panel */}
-        <div className="space-y-6">
-          {/* User Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5" />
-                Your Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Coins className="h-4 w-4 text-yellow-500" />
-                  <span>Coins</span>
-                </div>
-                <Badge variant="secondary">{user?.points || 0}</Badge>
+            </TabsContent>
+            
+            <TabsContent value="stats" className="space-y-4">
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-white mb-2">Prize Statistics</h3>
+                <p className="text-gray-400">Track your wheel spin history and prize probabilities</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-blue-500" />
-                  <span>Energy</span>
-                </div>
-                <Badge variant="secondary">{user?.energy || 0}/{user?.maxEnergy || 100}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-red-500" />
-                  <span>Level</span>
-                </div>
-                <Badge variant="secondary">{user?.level || 1}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Rewards Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Possible Rewards</CardTitle>
-              <CardDescription>
-                What you can win from the wheel
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isLoadingSettings ? (
-                <p>Loading rewards...</p>
-              ) : (
-                wheelRewards.map((reward, index) => (
-                  <div key={reward.id || index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{reward.icon}</span>
-                      <span className="capitalize">{reward.type}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">
-                        {reward.type !== 'character' ? `${reward.min !== undefined ? reward.min : 'N/A'}-${reward.max !== undefined ? reward.max : 'N/A'}` : 'Rare'}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {(reward.probability * 100).toFixed(1)}% chance
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-            {/* Save Settings Button */}
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={() => saveSettingsMutation.mutate(wheelRewards)}
-                disabled={saveSettingsMutation.isPending || isLoadingSettings}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
-              </Button>
-            </CardFooter>
-          </Card>
-
-
-          {/* Rules */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Rules</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>• One free spin every 24 hours</p>
-              <p>• Rewards are added to your account instantly</p>
-              <p>• Higher value rewards have lower chances</p>
-              <p>• Character rewards unlock new chat partners</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              <PrizeStats />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

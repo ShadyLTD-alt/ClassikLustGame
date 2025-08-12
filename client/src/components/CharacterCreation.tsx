@@ -97,15 +97,23 @@ export default function CharacterCreation() {
   });
 
   const createCharacterMutation = useMutation({
-    mutationFn: (data: CharacterCreationForm) => 
-      apiRequest("/api/characters", "POST", data),
+    mutationFn: async (data: CharacterCreationForm) => {
+      try {
+        const response = await apiRequest("POST", "/api/characters", data);
+        return await response.json();
+      } catch (error) {
+        console.error("Character creation error:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       toast.success("Character created successfully!");
       queryClient.invalidateQueries({ queryKey: ["/api/characters"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/characters"] });
       form.reset();
     },
-    onError: (error) => {
-      toast.error("Failed to create character");
+    onError: (error: any) => {
+      toast.error("Failed to create character: " + (error.message || "Unknown error"));
       console.error("Character creation error:", error);
     },
   });

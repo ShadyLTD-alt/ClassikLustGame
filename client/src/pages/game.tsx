@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import CharacterDisplay from "@/components/CharacterDisplay";
 import UpgradeModal from "@/components/UpgradeModal";
 import ChatModal from "@/components/ChatModal";
+import EnhancedChatModal from "@/components/EnhancedChatModal";
 import AdminPanel from "@/components/AdminPanel";
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
@@ -533,7 +534,7 @@ export default function Game() {
         user={user}
       />
 
-      <ChatModal
+      <EnhancedChatModal
         isOpen={showChatModal}
         onClose={() => setShowChatModal(false)}
         characterId={character?.id || ""}

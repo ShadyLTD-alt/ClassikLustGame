@@ -60,7 +60,8 @@ export default function FloatingHearts({ triggers }: FloatingHeartsProps) {
         </div>
       ))}
       
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes float-up {
           0% {
             opacity: 1;
@@ -79,7 +80,7 @@ export default function FloatingHearts({ triggers }: FloatingHeartsProps) {
         .animate-float-up {
           animation: float-up 2s ease-out forwards;
         }
-      `}</style>
+      `}}></style>
     </div>
   );
 }
