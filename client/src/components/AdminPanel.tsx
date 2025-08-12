@@ -452,6 +452,23 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="text-center p-6">
+                      <Button 
+                        onClick={() => {
+                          setEditingCharacter(null);
+                          setShowCharacterEditor(true);
+                        }}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8 py-3"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Open Character Editor
+                      </Button>
+                      <p className="text-sm text-slate-400 mt-2">
+                        Use the full character editor with all advanced options
+                      </p>
+                    </div>
+                    <Separator className="bg-slate-600" />
+                    <div className="text-sm text-slate-500 text-center">Or use quick create below:</div>
                     <div>
                       <Label className="text-white">Name</Label>
                       <Input 
@@ -653,8 +670,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     Image Management System
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ImageManager isOpen={isOpen} onClose={() => {}} />
+                <CardContent className="p-0">
+                  <div className="min-h-[500px]">
+                    <ImageManager isOpen={true} onClose={() => {}} />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -773,22 +792,28 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       </DialogContent>
       
       {/* Character Editor Modal */}
-      {showCharacterEditor && editingCharacter && (
-        <Dialog open={showCharacterEditor} onOpenChange={setShowCharacterEditor}>
-          <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700">
+      {showCharacterEditor && (
+        <Dialog open={showCharacterEditor} onOpenChange={(open) => {
+          setShowCharacterEditor(open);
+          if (!open) {
+            setEditingCharacter(null);
+          }
+        }}>
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-white">
-                Edit Character: {editingCharacter.name}
+                {editingCharacter ? `Edit Character: ${editingCharacter.name}` : 'Create New Character'}
               </DialogTitle>
             </DialogHeader>
             <div className="overflow-y-auto max-h-[80vh]">
               <CharacterEditor
                 character={editingCharacter}
-                isEditing={true}
+                isEditing={!!editingCharacter}
                 onSuccess={() => {
                   setShowCharacterEditor(false);
                   setEditingCharacter(null);
                   queryClient.invalidateQueries({ queryKey: ["/api/admin/characters"] });
+                  toast({ title: "Success", description: "Character saved successfully!" });
                 }}
                 onCancel={() => {
                   setShowCharacterEditor(false);
