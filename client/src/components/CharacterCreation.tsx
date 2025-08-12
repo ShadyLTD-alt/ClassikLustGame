@@ -370,7 +370,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="no-image">No Image Selected</SelectItem>
+                              <SelectItem value="none">Select main image</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
                                   {file.originalName || file.filename} - {file.fileType || 'image'}
@@ -396,7 +396,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="no-avatar">No Image Selected</SelectItem>
+                              <SelectItem value="none">Select avatar</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
                                   {file.originalName || file.filename} - {file.fileType || 'image'}
@@ -733,6 +733,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">Select a mood</SelectItem>
                         <SelectItem value="neutral">Neutral</SelectItem>
                         <SelectItem value="happy">Happy</SelectItem>
                         <SelectItem value="flirty">Flirty</SelectItem>
