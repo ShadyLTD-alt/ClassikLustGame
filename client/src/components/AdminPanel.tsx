@@ -17,6 +17,7 @@ import ImageManager from "@/components/ImageManager";
 import AICustomFunctions from "@/components/AICustomFunctions";
 import LayoutEditor from "@/components/LayoutEditor";
 import { Edit, Trash2, Bot, Brain } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
 
@@ -112,6 +113,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                 <TabsTrigger value="media" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Media</TabsTrigger>
                 <TabsTrigger value="tools" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Tools</TabsTrigger>
                 <TabsTrigger value="layout" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Layout</TabsTrigger>
+                <TabsTrigger value="economy" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Economy</TabsTrigger>
                 <TabsTrigger value="character-editor" className="text-white data-[state=active]:bg-purple-600 data-[state=active]:text-white">Edit</TabsTrigger>
               </TabsList>
 
@@ -323,6 +325,89 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </CardHeader>
                   <CardContent>
                     <LayoutEditor onClose={() => {}} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Economy Tab */}
+              <TabsContent value="economy" className="space-y-6">
+                <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                  <CardHeader>
+                    <CardTitle className="text-white">Economy Settings</CardTitle>
+                    <CardDescription className="text-white/70">Configure game economy and rewards</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="base-reward">Base Tap Reward</Label>
+                      <Input
+                        id="base-reward"
+                        type="number"
+                        defaultValue={1}
+                        className="bg-purple-900/50 border-purple-500/50 text-white"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                  <CardHeader>
+                    <CardTitle className="text-white">Energy System</CardTitle>
+                    <CardDescription className="text-white/70">Configure energy regeneration settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="energy-regen-amount">Energy Per Regeneration</Label>
+                      <Input
+                        id="energy-regen-amount"
+                        type="number"
+                        defaultValue={3}
+                        className="bg-purple-900/50 border-purple-500/50 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="energy-regen-interval">Regeneration Interval (seconds)</Label>
+                      <Input
+                        id="energy-regen-interval"
+                        type="number"
+                        defaultValue={5}
+                        className="bg-purple-900/50 border-purple-500/50 text-white"
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        const regenAmount = parseInt((document.getElementById('energy-regen-amount') as HTMLInputElement)?.value || '3');
+                        const intervalSeconds = parseInt((document.getElementById('energy-regen-interval') as HTMLInputElement)?.value || '5');
+
+                        fetch('/api/admin/energy-settings', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ regenAmount, intervalSeconds })
+                        }).then(res => res.json()).then(data => {
+                          if (data.success) {
+                            queryClient.invalidateQueries({ queryKey: ['/api/settings'] }); // Assuming settings include energy config
+                            toast({
+                              title: "Success",
+                              description: data.message,
+                            });
+                          } else {
+                            toast({
+                              title: "Error",
+                              description: data.message || "Failed to update energy settings",
+                              variant: "destructive",
+                            });
+                          }
+                        }).catch(error => {
+                          toast({
+                            title: "Error",
+                            description: "An unexpected error occurred",
+                            variant: "destructive",
+                          });
+                        });
+                      }}
+                      className="bg-gradient-to-r from-secondary-500 to-accent-500 hover:from-secondary-600 hover:to-accent-600"
+                    >
+                      Update Energy Settings
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>

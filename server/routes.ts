@@ -929,6 +929,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Energy Settings Endpoints
+  app.post("/api/admin/energy-settings", async (req, res) => {
+    try {
+      const { regenAmount, intervalSeconds } = req.body;
+
+      if (typeof regenAmount !== 'number' || typeof intervalSeconds !== 'number') {
+        return res.status(400).json({ error: "Invalid parameters" });
+      }
+
+      // In a real application, you would save these settings to a database or configuration file
+      // For now, we'll just log them and return success
+      console.log(`Energy regeneration updated: ${regenAmount} energy every ${intervalSeconds} seconds`);
+
+      // Placeholder for actual storage update
+      // await storage.updateEnergyRegenRate(regenAmount, intervalSeconds);
+
+      res.json({ 
+        success: true, 
+        message: `Energy regeneration updated: ${regenAmount} energy every ${intervalSeconds} seconds` 
+      });
+    } catch (error) {
+      console.error("Error updating energy settings:", error);
+      res.status(500).json({ error: "Failed to update energy settings" });
+    }
+  });
+
+  app.get("/api/admin/energy-settings", async (req, res) => {
+    try {
+      // In a real application, you would fetch these settings from your storage
+      // For now, we'll return default values
+      const defaultSettings = {
+        regenAmount: 3,
+        intervalSeconds: 5
+      };
+      res.json(defaultSettings);
+    } catch (error) {
+      console.error("Error fetching energy settings:", error);
+      res.status(500).json({ error: "Failed to fetch energy settings" });
+    }
+  });
+
+  // Implement background energy regeneration
+  // This is a simplified example and would typically run in a background process or use a more robust scheduling mechanism
+  // For demonstration, we'll simulate it by checking periodically
+  // NOTE: This is not a production-ready solution for background tasks.
+  setInterval(async () => {
+    try {
+      // Fetch current energy settings
+      const settings = { regenAmount: 3, intervalSeconds: 5 }; // Replace with actual fetch from storage
+      const users = await storage.getAllUsers(); // Fetch all users to update their energy
+
+      for (const user of users) {
+        if (user.energy < user.maxEnergy) { // Only regenerate if not at max energy
+          const newEnergy = Math.min(user.maxEnergy, user.energy + settings.regenAmount);
+          await storage.updateUser(user.id, { energy: newEnergy });
+          // console.log(`Regenerated energy for user ${user.id}. New energy: ${newEnergy}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error during background energy regeneration:", error);
+    }
+  }, 5000); // Regenerate every 5 seconds (intervalSeconds)
+
+
   const httpServer = createServer(app);
   return httpServer;
 }

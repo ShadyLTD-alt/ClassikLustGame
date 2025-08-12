@@ -83,6 +83,7 @@ export class MemStorage implements IStorage {
   private gameSettings: GameSettings;
   private mediaFiles: Map<string, MediaFile>;
   private selectedCharacters: Map<string, string>; // userId -> characterId
+  private energyRegenInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.users = new Map();
@@ -124,9 +125,10 @@ export class MemStorage implements IStorage {
 
     // Initialize with mock data
     this.initializeMockData();
-    
+
     // Load existing media files from uploads folder
     this.loadExistingMediaFiles();
+    this.startEnergyRegeneration();
   }
 
   private initializeMockData() {
@@ -276,19 +278,19 @@ export class MemStorage implements IStorage {
       const fs = require('fs');
       const path = require('path');
       const uploadsDir = './public/uploads';
-      
+
       if (!fs.existsSync(uploadsDir)) {
         console.log('Uploads directory does not exist');
         return;
       }
 
       const files = fs.readdirSync(uploadsDir);
-      
+
       for (const filename of files) {
         if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
           const filePath = path.join(uploadsDir, filename);
           const stats = fs.statSync(filePath);
-          
+
           const mediaFile: MediaFile = {
             id: randomUUID(),
             filename: filename,
@@ -305,12 +307,12 @@ export class MemStorage implements IStorage {
             isNsfw: false,
             createdAt: stats.birthtime || new Date()
           };
-          
+
           this.mediaFiles.set(mediaFile.id, mediaFile);
           console.log('Loaded existing media file:', filename);
         }
       }
-      
+
       console.log(`Loaded ${this.mediaFiles.size} existing media files`);
     } catch (error) {
       console.error('Error loading existing media files:', error);
@@ -459,7 +461,7 @@ export class MemStorage implements IStorage {
         ...updates.moodDistribution
       } : character.moodDistribution
     };
-    
+
     this.characters.set(id, updatedCharacter);
     console.log('Character updated successfully:', id, updatedCharacter);
     return updatedCharacter;
@@ -587,225 +589,57 @@ export class MemStorage implements IStorage {
   }
 
   async recordWheelSpin(userId: string, reward: string): Promise<void> {
-    this.wheelSpins.set(userId, new Date());
+    const stmt = this.db.prepare(`
+      INSERT INTO wheel_spins (userId, reward, timestamp)
+      VALUES (?, ?, ?)
+    `);
 
-    // Update wheel spin in stats
-    const stats = await this.getUserStats(userId);
-    await this.updateUserStats(userId, { lastWheelSpin: new Date(), wheelSpinsRemaining: Math.max(0, (stats.wheelSpinsRemaining || 1) - 1) });
+    stmt.run(userId, reward, Date.now());
   }
 
-  async getGameSettings(): Promise<GameSettings> {
-    return this.gameSettings;
+  // Energy regeneration system
+  private startEnergyRegeneration() {
+    // Regenerate 3 energy every 5 seconds for all users
+    this.energyRegenInterval = setInterval(async () => {
+      try {
+        const stmt = this.db.prepare(`
+          UPDATE users 
+          SET energy = MIN(maxEnergy, energy + 3) 
+          WHERE energy < maxEnergy
+        `);
+        stmt.run();
+      } catch (error) {
+        console.error("Error regenerating energy:", error);
+      }
+    }, 5000); // 5 seconds
   }
 
-  async updateGameSettings(settings: Partial<GameSettings>): Promise<void> {
-    this.gameSettings = {
-      ...this.gameSettings,
-      ...settings,
-      updatedAt: new Date()
-    };
-  }
-
-  async getSystemStats(): Promise<any> {
-    return {
-      totalUsers: this.users.size,
-      dailyActiveUsers: Math.floor(this.users.size * 0.7),
-      totalTaps: Array.from(this.gameStats.values()).reduce((sum, stats) => sum + stats.totalTaps, 0),
-      totalMediaFiles: this.mediaFiles.size,
-      totalCharacters: this.characters.size
-    };
-  }
-
-  async exportAllData(): Promise<any> {
-    return {
-      users: Array.from(this.users.values()),
-      characters: Array.from(this.characters.values()),
-      upgrades: Array.from(this.upgrades.values()),
-      gameStats: Array.from(this.gameStats.values()),
-      chatMessages: Object.fromEntries(this.chatMessages),
-      gameSettings: this.gameSettings,
-      mediaFiles: Array.from(this.mediaFiles.values()),
-      timestamp: new Date().toISOString()
-    };
-  }
-
-  async getAllMedia(): Promise<MediaFile[]> {
-    return Array.from(this.mediaFiles.values());
-  }
-
-  async getMediaFiles(characterId?: string): Promise<MediaFile[]> {
-    const files = Array.from(this.mediaFiles.values());
-    if (characterId) {
-      return files.filter(file => file.characterId === characterId);
-    }
-    return files;
-  }
-
-  async getMediaFile(id: string): Promise<MediaFile | undefined> {
-    return this.mediaFiles.get(id);
-  }
-
-  async saveMediaFile(file: MediaFile): Promise<MediaFile> {
-    this.mediaFiles.set(file.id, file);
-    return file;
-  }
-
-  async updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined> {
-    const file = this.mediaFiles.get(id);
-    if (!file) return undefined;
-
-    const updatedFile = { ...file, ...updates };
-    this.mediaFiles.set(id, updatedFile);
-    return updatedFile;
-  }
-
-  async deleteMediaFile(id: string): Promise<void> {
-    this.mediaFiles.delete(id);
-  }
-
-  async assignMediaToCharacter(mediaId: string, characterId: string): Promise<void> {
-    const media = this.mediaFiles.get(mediaId);
-    if (media) {
-      this.mediaFiles.set(mediaId, { ...media, characterId });
-    }
-  }
-
-  async upgradeUserUpgrade(userId: string, upgradeId: string): Promise<Upgrade> {
-    const upgrade = this.upgrades.get(upgradeId);
-    if (!upgrade || upgrade.userId !== userId) {
-      throw new Error("Upgrade not found");
+  async updateEnergyRegenRate(regenAmount: number, intervalSeconds: number) {
+    // Clear existing interval
+    if (this.energyRegenInterval) {
+      clearInterval(this.energyRegenInterval);
     }
 
-    if (upgrade.level >= upgrade.maxLevel) {
-      throw new Error("Upgrade is already at maximum level");
+    // Start new interval with custom settings
+    this.energyRegenInterval = setInterval(async () => {
+      try {
+        const stmt = this.db.prepare(`
+          UPDATE users 
+          SET energy = MIN(maxEnergy, energy + ?) 
+          WHERE energy < maxEnergy
+        `);
+        stmt.run(regenAmount);
+      } catch (error) {
+        console.error("Error regenerating energy:", error);
+      }
+    }, intervalSeconds * 1000);
+  }
+
+  destroy() {
+    if (this.energyRegenInterval) {
+      clearInterval(this.energyRegenInterval);
     }
-
-    const user = await this.getUser(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const newLevel = upgrade.level + 1;
-    const newCost = Math.floor(upgrade.cost * Math.pow(1.15, newLevel - 1));
-
-    if (user.points < newCost) {
-      throw new Error("Insufficient points");
-    }
-
-    // Update user points
-    await this.updateUser(userId, {
-      points: user.points - newCost,
-      hourlyRate: user.hourlyRate + upgrade.hourlyBonus
-    });
-
-    // Update upgrade
-    const updatedUpgrade = {
-      ...upgrade,
-      level: newLevel,
-      cost: Math.floor(newCost * 1.15)
-    };
-
-    this.upgrades.set(upgradeId, updatedUpgrade);
-    return updatedUpgrade;
-  }
-
-  async deleteUpgrade(id: string): Promise<void> {
-    this.upgrades.delete(id);
-  }
-
-  async getAllUpgrades(): Promise<Upgrade[]> {
-    return Array.from(this.upgrades.values());
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values()).map(user => ({
-      ...user,
-      password: "[HIDDEN]" // Don't expose passwords
-    }));
-  }
-
-  async deleteUser(id: string): Promise<void> {
-    this.users.delete(id);
-    this.gameStats.delete(id);
-    this.chatMessages.delete(id);
-    this.selectedCharacters.delete(id);
-    this.wheelSpins.delete(id);
-  }
-
-  // Event management
-  private events: Map<string, any> = new Map();
-
-  async getActiveEvents(): Promise<any[]> {
-    return Array.from(this.events.values()).filter(event =>
-      new Date(event.startDate) <= new Date() && new Date(event.endDate) >= new Date()
-    );
-  }
-
-  async createEvent(eventData: any): Promise<any> {
-    const id = randomUUID();
-    const event = {
-      ...eventData,
-      id,
-      createdAt: new Date()
-    };
-    this.events.set(id, event);
-    return event;
-  }
-
-  async updateEvent(id: string, updates: any): Promise<any | undefined> {
-    const event = this.events.get(id);
-    if (!event) return undefined;
-
-    const updatedEvent = { ...event, ...updates };
-    this.events.set(id, updatedEvent);
-    return updatedEvent;
-  }
-
-  async deleteEvent(id: string): Promise<void> {
-    this.events.delete(id);
-  }
-
-  async uploadMedia(file: any): Promise<MediaFile> {
-    const id = randomUUID();
-    const media: MediaFile = {
-      id,
-      filename: file.filename,
-      originalName: file.originalName || file.filename,
-      mimeType: file.mimeType || 'image/jpeg',
-      size: file.size || 0,
-      fileType: file.fileType || 'image',
-      url: file.url,
-      path: file.path || file.url,
-      characterId: file.characterId || null,
-      uploadedBy: file.uploadedBy || null,
-      tags: file.tags || [],
-      description: file.description || null,
-      isNsfw: file.isNsfw || false,
-      createdAt: new Date()
-    };
-    this.mediaFiles.set(id, media);
-    return media;
-  }
-
-  async updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined> {
-    const media = this.mediaFiles.get(id);
-    if (!media) return undefined;
-
-    const updatedMedia = { ...media, ...updates };
-    this.mediaFiles.set(id, updatedMedia);
-    return updatedMedia;
-  }
-
-  async deleteMediaFile(id: string): Promise<void> {
-    this.mediaFiles.delete(id);
-  }
-
-  async assignMediaToCharacter(mediaId: string, characterId: string): Promise<void> {
-    const media = this.mediaFiles.get(mediaId);
-    if (media) {
-      media.characterId = characterId;
-      this.mediaFiles.set(mediaId, media);
-    }
+    this.db.close();
   }
 }
 
