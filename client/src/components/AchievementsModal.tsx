@@ -308,6 +308,24 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                             <Button
                               size="sm"
                               className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/achievements/claim/${achievement.id}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId })
+                                  });
+                                  
+                                  if (response.ok) {
+                                    // Refresh achievements data
+                                    window.location.reload();
+                                  } else {
+                                    console.error('Failed to claim achievement');
+                                  }
+                                } catch (error) {
+                                  console.error('Error claiming achievement:', error);
+                                }
+                              }}
                             >
                               Claim
                             </Button>
@@ -368,6 +386,24 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(`/api/tasks/claim/${task.id}`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ userId })
+                                });
+                                
+                                if (response.ok) {
+                                  // Refresh tasks data
+                                  window.location.reload();
+                                } else {
+                                  console.error('Failed to claim task reward');
+                                }
+                              } catch (error) {
+                                console.error('Error claiming task:', error);
+                              }
+                            }}
                           >
                             Claim
                           </Button>

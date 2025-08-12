@@ -157,11 +157,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/upgrade/purchase", async (req, res) => {
     try {
-      const { userId, upgradeId } = req.body;
-      const upgrade = await storage.upgradeUserUpgrade(userId, upgradeId);
-      res.json(upgrade);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      const { upgradeId, userId } = req.body;
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Get all upgrades to find the one being purchased
+      const allUpgrades = await storage.getUpgrades();
+      const upgrade = allUpgrades.find(u => u.id === upgradeId);
+
+      if (!upgrade) {
+        return res.status(404).json({ error: "Upgrade not found" });
+      }
+
+      // Calculate current upgrade level and cost
+      const userUpgrades = user.upgrades || {};
+      const currentLevel = userUpgrades[upgradeId] || 0;
+      const nextLevel = currentLevel + 1;
+
+      // Check if upgrade is at max level
+      if (nextLevel > upgrade.maxLevel) {
+        return res.status(400).json({ error: "Upgrade is already at maximum level" });
+      }
+
+      // Calculate cost for next level (cost increases with level)
+      const upgradeCost = Math.floor(upgrade.cost * Math.pow(1.5, currentLevel));
+
+      console.log(`Upgrade purchase attempt: User has ${user.points} points, needs ${upgradeCost} points`);
+
+      if (user.points < upgradeCost) {
+        return res.status(400).json({ 
+          error: "Not enough points",
+          required: upgradeCost,
+          current: user.points
+        });
+      }
+
+      // Purchase upgrade - deduct points first
+      const newPoints = user.points - upgradeCost;
+      userUpgrades[upgradeId] = nextLevel;
+
+      // Update user with new points and upgrade level
+      await storage.updateUser(userId, {
+        points: newPoints,
+        upgrades: userUpgrades
+      });
+
+      // Recalculate user's tap bonus and hourly rate
+      let totalTapBonus = 1; // Base tap bonus
+      let totalHourlyBonus = 0;
+
+      for (const [upgradeId, level] of Object.entries(userUpgrades)) {
+        const upgradeData = allUpgrades.find(u => u.id === upgradeId);
+        if (upgradeData) {
+          totalTapBonus += upgradeData.tapBonus * level;
+          totalHourlyBonus += upgradeData.hourlyBonus * level;
+        }
+      }
+
+      // Update user's bonuses
+      await storage.updateUser(userId, {
+        tapBonus: totalTapBonus,
+        hourlyRate: totalHourlyBonus
+      });
+
+      console.log(`Upgrade purchased successfully: ${upgrade.name} level ${nextLevel}`);
+
+      res.json({ 
+        success: true,
+        message: `${upgrade.name} upgraded to level ${nextLevel}!`,
+        newPoints: newPoints,
+        upgradeLevel: nextLevel,
+        cost: upgradeCost,
+        newTapBonus: totalTapBonus,
+        newHourlyRate: totalHourlyBonus
+      });
+    } catch (error) {
+      console.error("Error purchasing upgrade:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
@@ -236,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get current stats for energy check
       const stats = await storage.getUserStats(userId);
-      
+
       // Check energy (require 5 energy per tap)
       const energyCost = 5;
       if (stats.currentEnergy < energyCost) {
@@ -457,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         probability: probability || 0.1,
         label: label || type
       };
-      
+
       const updatedRewards = [...(settings.wheelRewards as any[]), newPrize];
       await storage.updateGameSettings({ wheelRewards: updatedRewards });
       res.json(newPrize);

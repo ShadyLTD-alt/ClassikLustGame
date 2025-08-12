@@ -14,7 +14,6 @@ import UpgradeModal from "@/components/UpgradeModal";
 //import ChatModal from "@/components/ChatModal";
 import EnhancedChatModal from "@/components/EnhancedChatModal";
 import AdminPanel from "@/components/AdminPanel";
-
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";

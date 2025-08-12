@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -38,7 +37,8 @@ import {
   Monitor,
   Edit,
   Bot,
-  Brain
+  Brain,
+  X
 } from "lucide-react";
 
 import type { User, Character, Upgrade, GameStats, MediaFile } from "@shared/schema";
@@ -185,49 +185,52 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-7xl h-[90vh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700">
-          <DialogHeader className="border-b border-slate-700 pb-4">
-            <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              🎮 ClassikLust Admin Panel
-            </DialogTitle>
-            <DialogDescription className="text-center text-slate-300">
-              Comprehensive management system for users, characters, economy, and game settings
-            </DialogDescription>
+        <DialogContent className="max-w-6xl h-[90vh] bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-lg text-white border-0 shadow-2xl">
+          <DialogHeader className="border-b border-white/10 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
+                  🎮 ClassikLust Admin Panel
+                </DialogTitle>
+                <DialogDescription className="text-slate-300 mt-1">
+                  Manage users, characters, media, and game settings
+                </DialogDescription>
+              </div>
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                className="text-white/70 hover:bg-white/10 p-2 h-auto"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-7 bg-slate-800 border-slate-700">
-              <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-blue-600">
-                <BarChart3 className="w-4 h-4" />
+            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur border border-white/10">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600/80 data-[state=active]:text-white">
+                <BarChart3 className="w-4 h-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="characters" className="flex items-center gap-2 data-[state=active]:bg-purple-600">
-                <Gamepad2 className="w-4 h-4" />
+              <TabsTrigger value="characters" className="data-[state=active]:bg-purple-600/80 data-[state=active]:text-white">
+                <Gamepad2 className="w-4 h-4 mr-2" />
                 Characters
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-green-600">
-                <Users className="w-4 h-4" />
+              <TabsTrigger value="users" className="data-[state=active]:bg-green-600/80 data-[state=active]:text-white">
+                <Users className="w-4 h-4 mr-2" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="media" className="flex items-center gap-2 data-[state=active]:bg-orange-600">
-                <Image className="w-4 h-4" />
+              <TabsTrigger value="media" className="data-[state=active]:bg-orange-600/80 data-[state=active]:text-white">
+                <Image className="w-4 h-4 mr-2" />
                 Media
               </TabsTrigger>
-              <TabsTrigger value="economy" className="flex items-center gap-2 data-[state=active]:bg-yellow-600">
-                <DollarSign className="w-4 h-4" />
+              <TabsTrigger value="economy" className="data-[state=active]:bg-yellow-600/80 data-[state=active]:text-white">
+                <DollarSign className="w-4 h-4 mr-2" />
                 Economy
               </TabsTrigger>
-              <TabsTrigger value="chat" className="flex items-center gap-2 data-[state=active]:bg-pink-600">
-                <MessageCircle className="w-4 h-4" />
-                Chat & AI
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-red-600">
-                <Settings className="w-4 h-4" />
+              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600/80 data-[state=active]:text-white">
+                <Settings className="w-4 h-4 mr-2" />
                 Settings
-              </TabsTrigger>
-              <TabsTrigger value="character-editor" className="flex items-center gap-2 data-[state=active]:bg-indigo-600">
-                <Edit className="w-4 h-4" />
-                Editor
               </TabsTrigger>
             </TabsList>
 
@@ -235,72 +238,83 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border-blue-500/30">
+                  <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/30 border-blue-400/30 backdrop-blur">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-blue-200 text-sm font-medium">Total Users</p>
                           <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
                         </div>
-                        <Users className="w-8 h-8 text-blue-400" />
+                        <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                          <Users className="w-6 h-6 text-blue-300" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                  
-                  <Card className="bg-gradient-to-br from-purple-600/20 to-purple-700/20 border-purple-500/30">
+
+                  <Card className="bg-gradient-to-br from-purple-500/20 to-purple-600/30 border-purple-400/30 backdrop-blur">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-purple-200 text-sm font-medium">Characters</p>
                           <p className="text-3xl font-bold text-white">{stats.totalCharacters}</p>
                         </div>
-                        <Gamepad2 className="w-8 h-8 text-purple-400" />
+                        <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                          <Gamepad2 className="w-6 h-6 text-purple-300" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-yellow-600/20 to-yellow-700/20 border-yellow-500/30">
+                  <Card className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border-yellow-400/30 backdrop-blur">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-yellow-200 text-sm font-medium">Upgrades</p>
                           <p className="text-3xl font-bold text-white">{stats.totalUpgrades}</p>
                         </div>
-                        <Zap className="w-8 h-8 text-yellow-400" />
+                        <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                          <Zap className="w-6 h-6 text-yellow-300" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-green-600/20 to-green-700/20 border-green-500/30">
+                  <Card className="bg-gradient-to-br from-green-500/20 to-green-600/30 border-green-400/30 backdrop-blur">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-green-200 text-sm font-medium">Media Files</p>
                           <p className="text-3xl font-bold text-white">{Array.isArray(mediaFiles) ? mediaFiles.length : 0}</p>
                         </div>
-                        <Gift className="w-8 h-8 text-green-400" />
+                        <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <Image className="w-6 h-6 text-green-300" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
-                <Card className="bg-slate-800/50 border-slate-700">
+                <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                   <CardHeader>
-                    <CardTitle className="text-white">System Status</CardTitle>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Database className="w-5 h-5" />
+                      System Status
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/20">
                         <span className="text-slate-300">Database</span>
-                        <Badge className="bg-green-600 text-white">Online</Badge>
+                        <Badge className="bg-green-600/80 text-white border-green-500/50">Online</Badge>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/20">
                         <span className="text-slate-300">Energy System</span>
-                        <Badge className="bg-green-600 text-white">Active</Badge>
+                        <Badge className="bg-green-600/80 text-white border-green-500/50">Active</Badge>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/20">
                         <span className="text-slate-300">Wheel Game</span>
-                        <Badge className="bg-green-600 text-white">Operational</Badge>
+                        <Badge className="bg-green-600/80 text-white border-green-500/50">Operational</Badge>
                       </div>
                     </div>
                   </CardContent>
@@ -313,39 +327,41 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   <h3 className="text-xl font-bold text-white">Character Management</h3>
                   <Button 
                     onClick={() => setShowCharacterCreationState(true)}
-                    className="bg-pink-600 hover:bg-pink-700"
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 border-0"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Character
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {characters.map((character: any) => (
-                    <Card key={character.id} className="bg-slate-800/50 border-slate-700">
-                      <CardContent className="p-4">
+                    <Card key={character.id} className="bg-slate-800/40 backdrop-blur border-slate-600/30 hover:border-purple-400/50 transition-all">
+                      <CardContent className="p-6">
                         <div className="text-center">
-                          <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden">
+                          <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-2 border-purple-400/30">
                             <img 
                               src={character.imageUrl || '/api/placeholder-image'} 
                               alt={character.name}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="text-lg font-bold text-white">{character.name}</div>
-                          <div className="text-sm text-gray-300">{character.bio || character.description}</div>
-                          <div className="mt-2 flex justify-center space-x-2">
-                            <Badge variant="secondary">Lvl {character.requiredLevel || character.unlockLevel || 1}</Badge>
-                            <Badge variant="outline" className="text-white">
+                          <div className="text-lg font-bold text-white mb-2">{character.name}</div>
+                          <div className="text-sm text-slate-300 mb-3">{character.bio || character.description}</div>
+                          <div className="flex justify-center gap-2 mb-4">
+                            <Badge variant="secondary" className="bg-slate-700/50 text-slate-300">
+                              Lvl {character.requiredLevel || character.unlockLevel || 1}
+                            </Badge>
+                            <Badge variant="outline" className="border-purple-400/50 text-purple-300">
                               {character.personality || 'friendly'}
                             </Badge>
                           </div>
-                          <div className="mt-3 flex justify-center space-x-2">
+                          <div className="flex justify-center gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditCharacter(character)}
-                              className="border-gray-600 text-white hover:bg-white/10"
+                              className="border-slate-500/50 text-slate-300 hover:bg-slate-600/50"
                               title="Edit Character"
                             >
                               <Edit className="w-4 h-4" />
@@ -357,8 +373,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                                 setSelectedCharacterForAI(character.id);
                                 setShowAIFunctions(true);
                               }}
-                              className="border-blue-600 text-blue-400 hover:bg-blue-600/20"
-                              title="AI Custom Functions"
+                              className="border-blue-500/50 text-blue-300 hover:bg-blue-600/20"
+                              title="AI Functions"
                             >
                               <Bot className="w-4 h-4" />
                             </Button>
@@ -366,7 +382,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteCharacter(character.id)}
-                              title="Delete Character"
+                              className="bg-red-600/20 border-red-500/50 hover:bg-red-600/40"
+                              title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -380,7 +397,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
               {/* Users Tab */}
               <TabsContent value="users" className="space-y-6">
-                <Card className="bg-slate-800/50 border-slate-700">
+                <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                       <Users className="w-5 h-5" />
@@ -393,9 +410,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   <CardContent>
                     <div className="space-y-4">
                       {users.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                        <div key={user.id} className="flex items-center justify-between p-4 bg-slate-700/20 rounded-lg border border-slate-600/30 hover:bg-slate-700/30 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
                               {user.username.charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -406,9 +423,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {user.isAdmin && <Badge className="bg-red-600">Admin</Badge>}
-                            {user.isVip && <Badge className="bg-yellow-600">VIP</Badge>}
-                            <Button size="sm" variant="outline" className="border-slate-500 text-slate-300 hover:bg-slate-600">
+                            {user.isAdmin && <Badge className="bg-red-600/80 border-red-500/50">Admin</Badge>}
+                            {user.isVip && <Badge className="bg-yellow-600/80 border-yellow-500/50">VIP</Badge>}
+                            <Button size="sm" variant="outline" className="border-slate-500/50 text-slate-300 hover:bg-slate-600/50">
                               Edit
                             </Button>
                           </div>
@@ -425,7 +442,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   <h3 className="text-xl font-bold text-white">Media Management</h3>
                   <Button 
                     onClick={() => setShowImageManager(true)}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 border-0"
                   >
                     <Image className="w-4 h-4 mr-2" />
                     Open Image Manager
@@ -433,13 +450,13 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {Array.isArray(mediaFiles) && mediaFiles.map((media) => (
-                    <Card key={media.id || media.filename} className="bg-slate-800/50 border-slate-700">
+                  {Array.isArray(mediaFiles) && mediaFiles.map((media, index) => (
+                    <Card key={media.id || media.filename || index} className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                       <CardContent className="p-2">
                         <img 
                           src={media.path || `/uploads/${media.filename}`} 
                           alt={media.originalName || media.filename} 
-                          className="w-full h-auto rounded aspect-square object-cover bg-gray-700 mb-2"
+                          className="w-full h-24 rounded object-cover bg-slate-700/30 mb-2"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/api/placeholder-image';
                           }}
@@ -455,7 +472,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               <TabsContent value="economy" className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Upgrades Management */}
-                  <Card className="bg-slate-800/50 border-slate-700">
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div>
@@ -464,10 +481,10 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                             Upgrade Management
                           </CardTitle>
                           <CardDescription className="text-slate-300">
-                            Configure upgrade costs, bonuses, and requirements
+                            Configure upgrade costs and bonuses
                           </CardDescription>
                         </div>
-                        <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0">
                           <Plus className="w-4 h-4 mr-2" />
                           Add Upgrade
                         </Button>
@@ -477,7 +494,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                       <ScrollArea className="h-96">
                         <div className="space-y-3">
                           {upgrades.map((upgrade) => (
-                            <div key={upgrade.id} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                            <div key={upgrade.id} className="p-4 bg-slate-700/20 rounded-lg border border-slate-600/30">
                               <div className="flex items-center justify-between mb-2">
                                 <h3 className="font-semibold text-white">{upgrade.name}</h3>
                                 <div className="flex items-center gap-2">
@@ -485,7 +502,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                                     size="sm" 
                                     variant="outline"
                                     onClick={() => setEditingUpgrade(upgrade)}
-                                    className="border-slate-500 text-slate-300 hover:bg-slate-600"
+                                    className="border-slate-500/50 text-slate-300 hover:bg-slate-600/50"
                                   >
                                     <Edit3 className="w-3 h-3" />
                                   </Button>
@@ -493,16 +510,17 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                                     size="sm" 
                                     variant="destructive"
                                     onClick={() => deleteUpgradeMutation.mutate(upgrade.id)}
+                                    className="bg-red-600/20 border-red-500/50 hover:bg-red-600/40"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 gap-2 text-sm text-slate-300">
-                                <p>Cost: <span className="text-yellow-400">{upgrade.cost} LP</span></p>
-                                <p>Level: <span className="text-blue-400">{upgrade.level}/{upgrade.maxLevel}</span></p>
-                                <p>Tap Bonus: <span className="text-green-400">+{upgrade.tapBonus}</span></p>
-                                <p>Hourly: <span className="text-purple-400">+{upgrade.hourlyBonus}</span></p>
+                                <p>Cost: <span className="text-yellow-300">{upgrade.cost} LP</span></p>
+                                <p>Level: <span className="text-blue-300">{upgrade.level}/{upgrade.maxLevel}</span></p>
+                                <p>Tap Bonus: <span className="text-green-300">+{upgrade.tapBonus}</span></p>
+                                <p>Hourly: <span className="text-purple-300">+{upgrade.hourlyBonus}</span></p>
                               </div>
                             </div>
                           ))}
@@ -512,28 +530,28 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </Card>
 
                   {/* Energy Settings */}
-                  <Card className="bg-slate-800/50 border-slate-700">
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
                       <CardTitle className="text-white">Energy System</CardTitle>
                       <CardDescription className="text-slate-300">Configure energy regeneration settings</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label htmlFor="energy-regen-amount">Energy Per Regeneration</Label>
+                        <Label htmlFor="energy-regen-amount" className="text-slate-300">Energy Per Regeneration</Label>
                         <Input
                           id="energy-regen-amount"
                           type="number"
                           defaultValue={3}
-                          className="bg-slate-700 border-slate-600 text-white"
+                          className="bg-slate-700/30 border-slate-600/50 text-white mt-2"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="energy-regen-interval">Regeneration Interval (seconds)</Label>
+                        <Label htmlFor="energy-regen-interval" className="text-slate-300">Regeneration Interval (seconds)</Label>
                         <Input
                           id="energy-regen-interval"
                           type="number"
                           defaultValue={5}
-                          className="bg-slate-700 border-slate-600 text-white"
+                          className="bg-slate-700/30 border-slate-600/50 text-white mt-2"
                         />
                       </div>
                       <Button 
@@ -567,7 +585,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                             });
                           });
                         }}
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-0"
                       >
                         Update Energy Settings
                       </Button>
@@ -576,136 +594,78 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                 </div>
               </TabsContent>
 
-              {/* Chat & AI Tab */}
-              <TabsContent value="chat" className="space-y-6">
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <MessageCircle className="w-5 h-5" />
-                      Trigger Word Management
-                    </CardTitle>
-                    <CardDescription className="text-slate-300">
-                      Configure custom trigger words and responses for AI characters
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="text-slate-300">Trigger Word</Label>
-                          <Input 
-                            value={newTriggerWord}
-                            onChange={(e) => setNewTriggerWord(e.target.value)}
-                            placeholder="Enter trigger word..." 
-                            className="bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-slate-300">Response</Label>
-                          <Textarea 
-                            value={triggerResponse}
-                            onChange={(e) => setTriggerResponse(e.target.value)}
-                            placeholder="Enter response..." 
-                            className="bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        <Button 
-                          onClick={() => saveTriggerWordMutation.mutate({ 
-                            word: newTriggerWord, 
-                            response: triggerResponse 
-                          })}
-                          disabled={!newTriggerWord || !triggerResponse}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          Save Trigger Word
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white">Global Chat Settings</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                            <Label className="text-slate-300">Enable Auto Responses</Label>
-                            <Switch />
-                          </div>
-                          <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                            <Label className="text-slate-300">Save Conversation Snippets</Label>
-                            <Switch />
-                          </div>
-                          <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                            <Label className="text-slate-300">Dynamic Mood System</Label>
-                            <Switch />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
               {/* Settings Tab */}
               <TabsContent value="settings" className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="bg-slate-800/50 border-slate-700">
+                  {/* Trigger Words */}
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
-                      <CardTitle className="text-white">Game Economy Settings</CardTitle>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <MessageCircle className="w-5 h-5" />
+                        Trigger Word Management
+                      </CardTitle>
+                      <CardDescription className="text-slate-300">
+                        Configure custom trigger words and responses for AI characters
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <Label className="text-slate-300">Global Point Multiplier</Label>
+                      <div>
+                        <Label className="text-slate-300">Trigger Word</Label>
                         <Input 
-                          type="number" 
-                          placeholder="1.0" 
-                          className="bg-slate-700 border-slate-600 text-white"
-                          defaultValue={settings?.globalMultiplier || 1}
+                          value={newTriggerWord}
+                          onChange={(e) => setNewTriggerWord(e.target.value)}
+                          placeholder="Enter trigger word..." 
+                          className="bg-slate-700/30 border-slate-600/50 text-white mt-2"
                         />
                       </div>
-                      <div className="space-y-3">
-                        <Label className="text-slate-300">Energy Regeneration Rate</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="3" 
-                          className="bg-slate-700 border-slate-600 text-white"
-                          defaultValue={settings?.energyRegenRate || 3}
+                      <div>
+                        <Label className="text-slate-300">Response</Label>
+                        <Textarea 
+                          value={triggerResponse}
+                          onChange={(e) => setTriggerResponse(e.target.value)}
+                          placeholder="Enter response..." 
+                          className="bg-slate-700/30 border-slate-600/50 text-white mt-2"
                         />
                       </div>
-                      <div className="space-y-3">
-                        <Label className="text-slate-300">Max Energy</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="4500" 
-                          className="bg-slate-700 border-slate-600 text-white"
-                          defaultValue={settings?.maxEnergy || 4500}
-                        />
-                      </div>
+                      <Button 
+                        onClick={() => saveTriggerWordMutation.mutate({ 
+                          word: newTriggerWord, 
+                          response: triggerResponse 
+                        })}
+                        disabled={!newTriggerWord || !triggerResponse}
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0"
+                      >
+                        Save Trigger Word
+                      </Button>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-slate-800/50 border-slate-700">
+                  {/* UI Settings */}
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
                       <CardTitle className="text-white">UI & Display Settings</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg border border-slate-600/30">
                         <Label className="text-slate-300">Dark Mode</Label>
                         <Switch defaultChecked />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg border border-slate-600/30">
                         <Label className="text-slate-300">NSFW Content</Label>
                         <Switch />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg border border-slate-600/30">
                         <Label className="text-slate-300">Floating Animations</Label>
                         <Switch defaultChecked />
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-700/20 rounded-lg border border-slate-600/30">
                         <Label className="text-slate-300">Sound Effects</Label>
                         <Switch />
                       </div>
                       <div className="mt-4">
                         <Button 
                           onClick={() => setShowLayoutEditor(true)}
-                          className="w-full bg-purple-600 hover:bg-purple-700"
+                          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 border-0"
                         >
                           <Layers className="w-4 h-4 mr-2" />
                           Open Layout Editor
@@ -714,58 +674,6 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                     </CardContent>
                   </Card>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="character-editor" className="space-y-6">
-                {editingCharacter ? (
-                  <CharacterEditor 
-                    character={editingCharacter}
-                    isEditing={true}
-                    onSuccess={() => {
-                      setEditingCharacter(null);
-                      toast({
-                        title: "Character Updated",
-                        description: "Character has been successfully updated!",
-                      });
-                    }}
-                    onCancel={() => setEditingCharacter(null)}
-                  />
-                ) : (
-                  <Card className="bg-slate-800/50 border-slate-700">
-                    <CardHeader>
-                      <CardTitle className="text-white text-center">🎭 Character Editor</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="text-center text-white space-y-4">
-                        <p>Select a character to edit from the Characters tab, or create a new one.</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {characters.slice(0, 4).map((character) => (
-                            <Card key={character.id} className="bg-gray-700/50 border-gray-600 hover:bg-gray-600/50 transition-colors cursor-pointer" 
-                                  onClick={() => setEditingCharacter(character)}>
-                              <CardContent className="p-4 text-center">
-                                <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden">
-                                  <img 
-                                    src={character.imageUrl || '/api/placeholder-image'} 
-                                    alt={character.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div className="text-white font-medium">{character.name}</div>
-                                <div className="text-gray-400 text-sm">Level {character.requiredLevel}</div>
-                                <Button size="sm" className="mt-2 bg-purple-600 hover:bg-purple-700">
-                                  Edit Character
-                                </Button>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                        {characters.length === 0 && (
-                          <p className="text-gray-400">No characters available. Create some characters first.</p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </TabsContent>
             </ScrollArea>
           </Tabs>
