@@ -19,8 +19,7 @@ export default function GameHeader({ user }: GameHeaderProps) {
             variant="ghost"
             className="p-2 hover:bg-purple-700/30 rounded-full transition-all hover:scale-105"
             onClick={() => setShowGallery(true)}
-            title="Character Gallery"
-          >
+            title="Character Gallery">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
               👤
             </div>

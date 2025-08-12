@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+//import { Button } from "@/components/ui/button";
 import type { Character, User, GameStats } from "@shared/schema";
 
 interface CharacterDisplayProps {
@@ -10,7 +10,7 @@ interface CharacterDisplayProps {
   isTapping: boolean;
 }
 
-export default function CharacterDisplay({ character, user, stats, onTap, isTapping }: CharacterDisplayProps) {
+export default function CharacterDisplay({ character, user, onTap, isTapping }: CharacterDisplayProps) {
   const [tapEffect, setTapEffect] = useState(false);
 
   const handleTap = (event: React.MouseEvent) => {
@@ -25,54 +25,49 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
     }, 200);
   };
 
-  const energyPercentage = ((user.energy || 0) / (user.maxEnergy || 1)) * 100;
-
   return (
     <div className="px-4 pb-6">
       <div className="relative bg-black/20 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
+      </div>
 
         {/* Character Info */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold gradient-text">{character.name}</h2>
-          <p className="text-gray-300 text-sm">{character.bio}</p>
-          <div className="flex justify-center items-center mt-2 space-x-2">
-            <i className="fas fa-heart text-red-400"></i>
-            <span className="text-sm">❤️ 85%</span>
-            <span className="text-xs text-gray-400">Level {user.level}</span>
-          </div>
-        </div>
 
         {/* Character Image Container */}
-        <div className="relative mx-auto w-64 h-80 mb-6">
-          <img
-            src={character.imageUrl || character.avatarUrl || '/api/placeholder-image'}
-            alt={character.name}
-            className="w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float"
-            onClick={handleTap}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (target.src !== "/api/placeholder-image") {
-                target.src = "/api/placeholder-image";
-              }
-            }}
-            style={{
-              filter: user.energy <= 0 ? 'grayscale(100%)' : 'none'
-            }}
-            className={`w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float ${
-              tapEffect ? 'tap-effect' : ''
-            } ${user.energy <= 0 ? 'grayscale opacity-50' : ''}`}
-          />
+          <div className="relative mx-auto w-50 h-70 mb-6">
+      <img
+        src={character.imageUrl || character.avatarUrl || 'https://placehold.co/256x320/666666/FFFFFF?text=Placeholder'}
+        alt={character.name}
+        onClick={handleTap}
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          if (target.src !== 'https://placehold.co/256x320/666666/FFFFFF?text=Placeholder') {
+            target.src = 'https://placehold.co/256x320/666666/FFFFFF?text=Placeholder';
+          }
+        }}
+          className={`w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float ${
+          tapEffect ? 'tap-effect' : ''
+        } ${user.energy <= 0 ? 'grayscale opacity-50' : ''}`}
+        style={{
+          filter: user.energy <= 0 ? 'grayscale(100%)' : 'none'
+        }}
+      />
+    </div>
+         
+
+
 
           {/* Tap Effect Overlay */}
           <div
-            className={`absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl transition-opacity duration-200 pointer-events-none ${
+            className={`absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl transition-opacity duration-200 pointer-events-none' ${
               tapEffect ? 'opacity-100' : 'opacity-0'
             }`}
           />
 
           {/* Floating Hearts */}
           <div
-            className={`absolute top-4 right-4 transition-opacity duration-200 ${
+            className={`absolute top-4 right-4 transition-opacity duration-200' ${
               tapEffect ? 'opacity-100 animate-bounce' : 'opacity-0'
             }`}
           >
@@ -90,37 +85,6 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
             </div>
           )}
         </div>
-
-        {/* Energy Bar */}
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span>Energy</span>
-            <span>{user.energy}/{user.maxEnergy}</span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-3">
-            <div
-              className="energy-bar h-3 rounded-full transition-all duration-300"
-              style={{ width: `${energyPercentage}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-blue-900/30 rounded-lg p-3">
-            <div className="text-lg font-bold text-blue-400">{stats?.totalTaps || 0}</div>
-            <div className="text-xs text-gray-400">Total Taps</div>
-          </div>
-          <div className="bg-green-900/30 rounded-lg p-3">
-            <div className="text-lg font-bold text-green-400">+125</div>
-            <div className="text-xs text-gray-400">Per Tap</div>
-          </div>
-          <div className="bg-purple-900/30 rounded-lg p-3">
-            <div className="text-lg font-bold text-purple-400">{user.hourlyRate.toLocaleString()}</div>
-            <div className="text-xs text-gray-400">Per Hour</div>
-          </div>
-        </div>
       </div>
-    </div>
   );
 }

@@ -11,7 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import CharacterDisplay from "@/components/CharacterDisplay";
 import UpgradeModal from "@/components/UpgradeModal";
-import ChatModal from "@/components/ChatModal";
+//import ChatModal from "@/components/ChatModal";
 import EnhancedChatModal from "@/components/EnhancedChatModal";
 import AdminPanel from "@/components/AdminPanel";
 import WheelModal from "@/components/WheelModal";
@@ -245,8 +245,8 @@ export default function Game() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center space-x-4">
-                <span className="text-white font-bold">Level: {user.level}/10</span>
                 <span className="text-white font-bold">{user.username || "Guest"}</span>
+                <span className="text-white font-bold">Level: {user.level}/50</span>
               </div>
               <div className="flex items-center space-x-1 mt-1">
                 <Heart className="w-4 h-4 text-red-400" />
@@ -256,21 +256,21 @@ export default function Game() {
           </div>
 
           {/* Top-Right Block */}
-          <div className="text-right relative">
+          <div className="text-center relative">
             <div className="text-white">
-              <div className="text-sm">LP per Hour</div>
+              <div className="text-sm font-bold">LP per Hour:</div>
               <div className="text-lg font-bold text-green-400">+{user?.hourlyRate?.toLocaleString() || "0"}</div>
             </div>
             <div className="flex items-center justify-end space-x-4 mt-2">
               <div className="flex items-center space-x-1">
                 <Gem className="w-4 h-4 text-green-400" />
-                <span className="text-white text-sm">Lust Gems</span>
+                <span className="text-white text-sm">Lust Gems: </span>
                 <span className="text-white font-bold">{stats?.totalPoints ? Math.floor(stats.totalPoints / 100) : "24"}</span>
               </div>
             </div>
             <div className="flex items-center justify-end space-x-1 mt-1">
               <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-white text-sm">Energy</span>
+              <span className="text-white text-sm">Energy: </span>
               <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "5500"}</span>
             </div>
 
