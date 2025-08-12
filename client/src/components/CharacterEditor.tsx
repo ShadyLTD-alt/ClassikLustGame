@@ -18,6 +18,8 @@ import { toast } from "react-hot-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Character } from "@shared/schema";
 
+const MOCK_USER_ID = "mock-user-id";
+
 // Extended character schema for editing
 const characterEditSchema = insertCharacterSchema.extend({
   level: z.number().min(1).max(100).default(1),

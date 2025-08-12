@@ -80,20 +80,17 @@ Keep your response concise and actionable.`;
       return 'I understand! Thanks for talking with me.'; // Fallback response
     }
 
-    const historyContext = request.conversationHistory
-      ? request.conversationHistory.slice(-10).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+    const historyContext = request.conversationHistory && request.conversationHistory.length > 0
+      ? request.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')
       : '';
 
     const prompt = `You are roleplaying as a character in an anime-style game. 
 
 Character personality: ${request.characterPersonality || 'friendly and engaging'}
 
-Recent conversation:
-${historyContext}
+${historyContext ? `Previous conversation:\n${historyContext}\n` : ''}User: ${request.message}
 
-User message: ${request.message}
-
-Respond in character with a natural, engaging message. Keep it conversational and match the character's personality. Limit response to 1-2 sentences.`;
+Respond naturally as the character. Keep it conversational and engaging. Do not repeat previous responses or greetings unless it's the very first message of the conversation. Limit response to 1-2 sentences.`;
 
     try {
       const response = await this.callMistralAPI(prompt, this.config.model);

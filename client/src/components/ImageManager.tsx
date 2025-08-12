@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Trash2, Edit, Image as ImageIcon } from "lucide-react";
 
+const MOCK_USER_ID = "mock-user-id";
+
 interface ImageManagerProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -105,7 +107,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
     if (selectedCharacter && selectedCharacter !== 'unassigned') {
       formData.append('characterId', selectedCharacter);
     }
-    formData.append('userId', 'mock-user-id');
+    formData.append('userId', MOCK_USER_ID);
     formData.append('category', uploadCategory);
     formData.append('fileType', uploadCategory);
 

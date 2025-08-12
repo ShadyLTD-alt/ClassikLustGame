@@ -392,12 +392,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get character for personality context
       const character = messageData.characterId ? await storage.getCharacter(messageData.characterId) : null;
       
-      // Get recent conversation history
+      // Get recent conversation history (excluding the current message being sent)
       const recentMessages = await storage.getChatMessages(messageData.userId, messageData.characterId || undefined);
-      const conversationHistory = recentMessages.slice(-10).map(msg => ({
-        role: msg.isFromUser ? 'user' as const : 'assistant' as const,
-        content: msg.message
-      }));
+      const conversationHistory = recentMessages
+        .filter(msg => msg.message !== messageData.message) // Exclude current message
+        .slice(-6) // Get last 6 messages for context
+        .map(msg => ({
+          role: msg.isFromUser ? 'user' as const : 'assistant' as const,
+          content: msg.message
+        }));
 
       let aiResponseText = "I understand! Thanks for talking with me.";
 
