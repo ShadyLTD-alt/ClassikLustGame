@@ -61,10 +61,13 @@ export interface IStorage {
 
   // Media management
   getAllMedia(): Promise<MediaFile[]>;
+  getMediaFiles(characterId?: string): Promise<MediaFile[]>;
   getMediaFile(id: string): Promise<MediaFile | undefined>;
+  saveMediaFile(file: MediaFile): Promise<MediaFile>;
   uploadMedia(file: any): Promise<MediaFile>;
   updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined>;
   deleteMediaFile(id: string): Promise<void>;
+  assignMediaToCharacter(mediaId: string, characterId: string): Promise<void>;
   
   // Admin methods
   getAllUsers(): Promise<User[]>;
@@ -103,6 +106,19 @@ export class MemStorage implements IStorage {
         { type: 'energy', min: 100, max: 500, probability: 0.2 },
         { type: 'character', probability: 0.1 }
       ],
+      chatRandomPercentage: 15,
+      vipBenefits: {
+        daily: { coins: 500, gems: 24, energyRegen: 50, exclusiveChars: true, vipChat: true },
+        weekly: { coins: 2000, gems: 7, energyRegen: 100, allExclusive: true, prioritySupport: true, dailyBonus: true },
+        monthly: { coins: 6000, gems: 30, energyRegen: 200, unlimited: true, customChars: true, monthlyEvents: true }
+      },
+      levelRequirements: [
+        { level: 1, pointsRequired: 0 },
+        { level: 2, pointsRequired: 1000 },
+        { level: 3, pointsRequired: 2500 },
+        { level: 4, pointsRequired: 5000 },
+        { level: 5, pointsRequired: 10000 }
+      ],
       updatedAt: new Date()
     };
 
@@ -132,6 +148,9 @@ export class MemStorage implements IStorage {
       {
         id: "char-yuki",
         name: "Akira",
+        description: "A confident and athletic anime girl with striking blue eyes and dark hair",
+        userId: mockUser.id,
+        level: 1,
         bio: "A confident and athletic anime girl with striking blue eyes and dark hair",
         backstory: "A dedicated fitness enthusiast who balances strength training with her love for anime and gaming",
         interests: "Fitness, anime, gaming, outdoor activities",
@@ -153,6 +172,7 @@ export class MemStorage implements IStorage {
         },
         responseTimeMin: 1,
         responseTimeMax: 3,
+        responseTimeMs: 2000,
         randomPictureSending: true,
         pictureSendChance: 5,
         customTriggerWords: [],
@@ -163,12 +183,14 @@ export class MemStorage implements IStorage {
         isNsfw: false,
         isVip: false,
         isEvent: false,
-        isWheelReward: true,
-        userId: mockUser.id
+        isWheelReward: true
       },
       {
         id: "char-aria",
         name: "Luna",
+        description: "A gentle and thoughtful anime girl with mesmerizing blue eyes",
+        userId: mockUser.id,
+        level: 1,
         bio: "A gentle and thoughtful anime girl with mesmerizing blue eyes",
         backstory: "A calm and introspective character who enjoys peaceful moments and deep conversations",
         interests: "Art, reading, stargazing, quiet cafes",
@@ -190,6 +212,7 @@ export class MemStorage implements IStorage {
         },
         responseTimeMin: 2,
         responseTimeMax: 5,
+        responseTimeMs: 3000,
         randomPictureSending: false,
         pictureSendChance: 3,
         customTriggerWords: [],
@@ -200,8 +223,7 @@ export class MemStorage implements IStorage {
         isNsfw: false,
         isVip: true,
         isEvent: false,
-        isWheelReward: false,
-        userId: mockUser.id
+        isWheelReward: false
       }
     ];
 
@@ -531,6 +553,10 @@ export class MemStorage implements IStorage {
     };
   }
 
+  async getAllMedia(): Promise<MediaFile[]> {
+    return Array.from(this.mediaFiles.values());
+  }
+
   async getMediaFiles(characterId?: string): Promise<MediaFile[]> {
     const files = Array.from(this.mediaFiles.values());
     if (characterId) {
@@ -543,8 +569,9 @@ export class MemStorage implements IStorage {
     return this.mediaFiles.get(id);
   }
 
-  async saveMediaFile(file: MediaFile): Promise<void> {
+  async saveMediaFile(file: MediaFile): Promise<MediaFile> {
     this.mediaFiles.set(file.id, file);
+    return file;
   }
 
   async updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined> {
@@ -662,23 +689,22 @@ export class MemStorage implements IStorage {
     this.events.delete(id);
   }
 
-  async getAllMedia(): Promise<MediaFile[]> {
-    return Array.from(this.mediaFiles.values());
-  }
-
-  async getMediaFile(id: string): Promise<MediaFile | undefined> {
-    return this.mediaFiles.get(id);
-  }
-
   async uploadMedia(file: any): Promise<MediaFile> {
     const id = randomUUID();
     const media: MediaFile = {
       id,
       filename: file.filename,
-      fileType: file.fileType,
+      originalName: file.originalName || file.filename,
+      mimeType: file.mimeType || 'image/jpeg',
+      size: file.size || 0,
+      fileType: file.fileType || 'image',
       url: file.url,
+      path: file.path || file.url,
       characterId: file.characterId || null,
-      uploadedBy: file.uploadedBy,
+      uploadedBy: file.uploadedBy || null,
+      tags: file.tags || [],
+      description: file.description || null,
+      isNsfw: file.isNsfw || false,
       createdAt: new Date()
     };
     this.mediaFiles.set(id, media);
@@ -696,6 +722,14 @@ export class MemStorage implements IStorage {
 
   async deleteMediaFile(id: string): Promise<void> {
     this.mediaFiles.delete(id);
+  }
+
+  async assignMediaToCharacter(mediaId: string, characterId: string): Promise<void> {
+    const media = this.mediaFiles.get(mediaId);
+    if (media) {
+      media.characterId = characterId;
+      this.mediaFiles.set(mediaId, media);
+    }
   }
 }
 

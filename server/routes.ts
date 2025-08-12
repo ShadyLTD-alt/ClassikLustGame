@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import sharp from "sharp";
@@ -40,6 +41,10 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded files
+  app.use('/uploads', express.static('./public/uploads'));
+  app.use('/public', express.static('./public'));
+  
   // User routes
   app.get("/api/user/:id", async (req, res) => {
     try {
@@ -367,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/media", async (req, res) => {
     try {
-      const media = await storage.getAllMedia();
+      const media = await storage.getMediaFiles();
       res.json(media);
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -588,7 +593,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             uploadedBy: userId || 'anonymous'
           };
 
-          const savedFile = await storage.saveMediaFile(mediaFile as any);
+          const savedFile = await storage.uploadMedia({
+            ...mediaFile,
+            fileType: 'image',
+            url: mediaFile.path
+          });
           uploadedFiles.push(savedFile);
         } catch (fileError) {
           console.error('Error processing file:', file.originalname, fileError);
@@ -648,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Delete physical file
-      const fullPath = path.join('./public', mediaFile.path);
+      const fullPath = path.join('./public', mediaFile.url);
       try {
         await fs.unlink(fullPath);
       } catch (err) {
@@ -685,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Media file not found" });
       }
 
-      const originalPath = path.join('./public', mediaFile.path);
+      const originalPath = path.join('./public', mediaFile.url);
       const editedFilename = 'edited-' + Date.now() + '-' + mediaFile.filename;
       const editedPath = path.join(uploadDir, editedFilename);
 

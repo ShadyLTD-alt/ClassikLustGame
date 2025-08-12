@@ -120,10 +120,17 @@ export const chatMessages = pgTable("chatMessages", {
 export const mediaFiles = pgTable("mediaFiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   filename: text("filename").notNull(),
+  originalName: text("originalName"),
+  mimeType: text("mimeType").notNull(),
+  size: integer("size").default(0),
   fileType: text("fileType").notNull(),
   url: text("url").notNull(),
+  path: text("path").notNull(),
   characterId: varchar("characterId"),
   uploadedBy: varchar("uploadedBy"),
+  tags: jsonb("tags").default([]),
+  description: text("description"),
+  isNsfw: boolean("isNsfw").default(false),
   createdAt: timestamp("createdAt").notNull().default(sql`now()`)
 });
 
