@@ -8,6 +8,8 @@ import { promises as fs } from "fs";
 import fsSync from "fs";
 import { storage } from "./storage";
 import { insertUserSchema, insertCharacterSchema, insertUpgradeSchema, insertChatMessageSchema, insertMediaFileSchema } from "@shared/schema";
+import { randomUUID } from "crypto";
+import { MediaFile } from "@shared/types";
 
 // Configure multer for file uploads
 const uploadDir = './public/uploads';

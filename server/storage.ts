@@ -124,6 +124,9 @@ export class MemStorage implements IStorage {
 
     // Initialize with mock data
     this.initializeMockData();
+    
+    // Load existing media files from uploads folder
+    this.loadExistingMediaFiles();
   }
 
   private initializeMockData() {
@@ -155,8 +158,8 @@ export class MemStorage implements IStorage {
         backstory: "A dedicated fitness enthusiast who balances strength training with her love for anime and gaming",
         interests: "Fitness, anime, gaming, outdoor activities",
         quirks: "Always flexes when excited, has a competitive streak in everything",
-        imageUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754900337225.jpg",
-        avatarUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754904198450.jpg",
+        imageUrl: "/uploads/images-1754981650026-111631932.webp",
+        avatarUrl: "/uploads/images-1754981667686-266701314.jpg",
         isUnlocked: true,
         requiredLevel: 1,
         personality: "playful",
@@ -195,8 +198,8 @@ export class MemStorage implements IStorage {
         backstory: "A calm and introspective character who enjoys peaceful moments and deep conversations",
         interests: "Art, reading, stargazing, quiet cafes",
         quirks: "Always notices small details, has a soft spot for cute things",
-        imageUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927~2_1754900501584.jpg",
-        avatarUrl: "/attached_assets/ComfyUI_00020_~2_1754881963927_1754900337225.jpg",
+        imageUrl: "/uploads/images-1754981888520-125105970.jpg",
+        avatarUrl: "/uploads/images-1754981905106-372223556.jpg",
         isUnlocked: false,
         requiredLevel: 5,
         personality: "shy",
@@ -266,6 +269,69 @@ export class MemStorage implements IStorage {
 
     // Initialize empty chat for user
     this.chatMessages.set(mockUser.id, []);
+  }
+
+  private async loadExistingMediaFiles() {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const uploadsDir = './public/uploads';
+      
+      if (!fs.existsSync(uploadsDir)) {
+        console.log('Uploads directory does not exist');
+        return;
+      }
+
+      const files = fs.readdirSync(uploadsDir);
+      
+      for (const filename of files) {
+        if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          const filePath = path.join(uploadsDir, filename);
+          const stats = fs.statSync(filePath);
+          
+          const mediaFile: MediaFile = {
+            id: randomUUID(),
+            filename: filename,
+            originalName: filename,
+            mimeType: this.getMimeType(filename),
+            size: stats.size,
+            fileType: 'image',
+            url: `/uploads/${filename}`,
+            path: `/uploads/${filename}`,
+            characterId: null,
+            uploadedBy: 'system',
+            tags: [],
+            description: null,
+            isNsfw: false,
+            createdAt: stats.birthtime || new Date()
+          };
+          
+          this.mediaFiles.set(mediaFile.id, mediaFile);
+          console.log('Loaded existing media file:', filename);
+        }
+      }
+      
+      console.log(`Loaded ${this.mediaFiles.size} existing media files`);
+    } catch (error) {
+      console.error('Error loading existing media files:', error);
+    }
+  }
+
+  private getMimeType(filename: string): string {
+    const ext = filename.toLowerCase().split('.').pop();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -384,8 +450,18 @@ export class MemStorage implements IStorage {
     const character = this.characters.get(id);
     if (!character) return undefined;
 
-    const updatedCharacter = { ...character, ...updates };
+    // Ensure moodDistribution is properly merged
+    const updatedCharacter = { 
+      ...character, 
+      ...updates,
+      moodDistribution: updates.moodDistribution ? {
+        ...character.moodDistribution,
+        ...updates.moodDistribution
+      } : character.moodDistribution
+    };
+    
     this.characters.set(id, updatedCharacter);
+    console.log('Character updated successfully:', id, updatedCharacter);
     return updatedCharacter;
   }
 
