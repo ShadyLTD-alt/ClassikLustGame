@@ -257,8 +257,8 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               </div>
 
               <div className="flex-1 overflow-y-auto px-6 pb-6">
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-6">
+                  {/* Overview Tab */}
+                  <TabsContent value="overview" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/30 border-blue-400/30 backdrop-blur">
                     <CardContent className="p-6">
@@ -775,9 +775,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
                   </Card>
                 </div>
               </TabsContent>
-            </Tabs>
+                </Tabs>
+              </div>
             </div>
-          </div>
         </DialogContent>
       </Dialog>
 
