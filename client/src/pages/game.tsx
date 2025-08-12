@@ -14,6 +14,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 //import ChatModal from "@/components/ChatModal";
 import EnhancedChatModal from "@/components/EnhancedChatModal";
 import AdminPanel from "@/components/AdminPanel";
+import AdminDashboard from "@/components/AdminDashboard";
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";
@@ -35,7 +36,8 @@ import {
   Sun,
   Shield,
   Eye,
-  Save
+  Save,
+  BarChart3
 } from "lucide-react";
 import type { User, Character, Upgrade, GameStats } from "@shared/schema";
 
@@ -50,6 +52,7 @@ export default function Game() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   const [showVIPModal, setShowVIPModal] = useState(false);
@@ -275,15 +278,24 @@ export default function Game() {
               <span className="text-white font-bold">{stats?.currentEnergy || "1500"}/{stats?.maxEnergy || "5500"}</span>
             </div>
 
-            {/* Admin Button - Only visible to admin users */}
+            {/* Admin Buttons - Only visible to admin users */}
             {isCurrentUserAdmin(user) && (
-              <Button
-                onClick={() => setShowAdminPanel(true)}
-                className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg flex items-center justify-center p-0"
-                title="Admin Panel"
-              >
-                <Shield className="w-4 h-4" />
-              </Button>
+              <div className="absolute -top-2 -right-2 flex gap-1">
+                <Button
+                  onClick={() => setShowAdminDashboard(true)}
+                  className="w-8 h-8 rounded-full bg-slate-600 hover:bg-slate-700 text-white shadow-lg flex items-center justify-center p-0"
+                  title="Admin Dashboard"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => setShowAdminPanel(true)}
+                  className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg flex items-center justify-center p-0"
+                  title="Admin Panel"
+                >
+                  <Shield className="w-4 h-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -575,6 +587,11 @@ export default function Game() {
         isOpen={showVIPModal}
         onClose={() => setShowVIPModal(false)}
         userId={MOCK_USER_ID}
+      />
+
+      <AdminDashboard
+        isOpen={showAdminDashboard}
+        onClose={() => setShowAdminDashboard(false)}
       />
 
       {/* Floating Hearts Animation */}

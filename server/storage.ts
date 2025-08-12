@@ -48,6 +48,7 @@ export interface IStorage {
 
   // Upgrade system
   upgradeUserUpgrade(userId: string, upgradeId: string): Promise<Upgrade>;
+  deleteUpgrade(id: string): Promise<void>;
 
   // Chat system
   getChatMessages(userId: string, characterId?: string): Promise<ChatMessage[]>;
@@ -143,7 +144,7 @@ export class MemStorage implements IStorage {
       username: "ShadyLTD",
       password: "password123",
       level: 4,
-      points: 2140,
+      points: 25000,
       energy: 4500,
       maxEnergy: 4500,
       hourlyRate: 16933,
@@ -569,6 +570,10 @@ export class MemStorage implements IStorage {
     this.upgrades.set(upgradeId, updatedUpgrade);
 
     return updatedUpgrade;
+  }
+
+  async deleteUpgrade(id: string): Promise<void> {
+    this.upgrades.delete(id);
   }
 
   async getUserStats(userId: string): Promise<GameStats> {

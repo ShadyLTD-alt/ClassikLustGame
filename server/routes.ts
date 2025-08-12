@@ -473,6 +473,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat settings routes
+  app.get("/api/chat/settings/:userId/:characterId", async (req, res) => {
+    try {
+      const { userId, characterId } = req.params;
+      // For now, return default settings - implement storage later
+      res.json({
+        settings: {
+          autoReply: false,
+          allowImages: true,
+          moodResponses: true,
+          triggerWords: []
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/chat/settings", async (req, res) => {
+    try {
+      const { userId, characterId, settings } = req.body;
+      // TODO: Implement settings storage
+      console.log('Saving chat settings:', { userId, characterId, settings });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/trigger-words", async (req, res) => {
+    try {
+      const { word, response, characterId } = req.body;
+      // TODO: Implement trigger words storage
+      console.log('Saving trigger word:', { word, response, characterId });
+      res.json({ success: true, id: randomUUID() });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/media", async (req, res) => {
     try {
       const media = await storage.getMediaFiles();
