@@ -21,6 +21,7 @@ import AICustomFunctions from "@/components/AICustomFunctions";
 import LayoutEditor from "@/components/LayoutEditor";
 import MistralDebugger from "@/components/MistralDebugger";
 import MistralControls from "@/components/MistralControls";
+import WheelPrizeManager from "@/components/WheelPrizeManager";
 import { 
   Edit3, 
   Trash2, 
@@ -68,6 +69,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
   const [showAIFunctions, setShowAIFunctions] = useState(false);
   const [showLayoutEditor, setShowLayoutEditor] = useState(false);
   const [showMistralDebugger, setShowMistralDebugger] = useState(false);
+  const [showWheelPrizeManager, setShowWheelPrizeManager] = useState(false);
   const [selectedCharacterForAI, setSelectedCharacterForAI] = useState<string>("");
   const [newTriggerWord, setNewTriggerWord] = useState("");
   const [triggerResponse, setTriggerResponse] = useState("");
@@ -160,6 +162,18 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
       setNewTriggerWord("");
       setTriggerResponse("");
       toast({ title: "Trigger word saved successfully" });
+    },
+  });
+
+  // Delete wheel prize mutation
+  const deleteWheelPrizeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/wheel-prizes/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/wheel-prizes"] });
+      toast({ title: "Wheel prize deleted successfully" });
     },
   });
 
@@ -476,6 +490,59 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               {/* Economy Tab */}
               <TabsContent value="economy" className="space-y-4">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* Wheel Prize Management */}
+                  <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <Gift className="w-5 h-5" />
+                            Wheel Prize Management
+                          </CardTitle>
+                          <CardDescription className="text-slate-300">
+                            Configure all available wheel prizes and their probabilities
+                          </CardDescription>
+                        </div>
+                        <Button 
+                          onClick={() => setShowWheelPrizeManager(true)}
+                          className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 border-0"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Manage Prizes
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-80">
+                        <div className="space-y-3">
+                          {wheelPrizes.map((prize: any, index: number) => (
+                            <div key={prize.id || index} className="p-3 bg-slate-700/20 rounded-lg border border-slate-600/30">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold text-white">{prize.label || prize.type}</h4>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-purple-600/80 text-white">
+                                    {(prize.probability * 100).toFixed(1)}%
+                                  </Badge>
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => deleteWheelPrizeMutation.mutate(prize.id || index)}
+                                    className="bg-red-600/20 border-red-500/50 hover:bg-red-600/40 p-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="text-xs text-slate-300">
+                                <p>Type: <span className="text-yellow-300">{prize.type}</span></p>
+                                <p>Value: <span className="text-green-300">{prize.min}-{prize.max}</span></p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
                   {/* Upgrades Management */}
                   <Card className="bg-slate-800/40 backdrop-blur border-slate-600/30">
                     <CardHeader>
@@ -778,6 +845,11 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
       <MistralDebugger 
         isOpen={showMistralDebugger} 
         onClose={() => setShowMistralDebugger(false)} 
+      />
+
+      <WheelPrizeManager 
+        isOpen={showWheelPrizeManager} 
+        onClose={() => setShowWheelPrizeManager(false)} 
       />
     </>
   );

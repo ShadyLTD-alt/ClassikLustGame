@@ -274,6 +274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/send", async (req, res) => {
     try {
       const messageData = insertChatMessageSchema.parse(req.body);
+      console.log('Chat send request:', messageData);
+      
       const message = await storage.createChatMessage(messageData);
 
       // Get character for personality context
@@ -291,16 +293,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try MistralAI if enabled, otherwise use fallback
       if (mistralService.isEnabled()) {
         try {
+          console.log('Using MistralAI for chat response');
           aiResponseText = await mistralService.generateChatResponse({
             message: messageData.message,
             characterId: messageData.characterId,
             conversationHistory,
             characterPersonality: character?.personality || character?.bio || 'friendly'
           });
+          console.log('MistralAI response:', aiResponseText);
         } catch (error) {
           console.warn('MistralAI chat failed, using fallback:', error);
           // Use existing fallback logic
+          aiResponseText = generateFallbackResponse(messageData.message, character);
         }
+      } else {
+        console.log('MistralAI disabled, using fallback');
+        aiResponseText = generateFallbackResponse(messageData.message, character);
       }
 
       const aiResponse = await storage.createChatMessage({
@@ -312,9 +320,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ userMessage: message, aiResponse });
     } catch (error) {
+      console.error('Chat send error:', error);
       res.status(400).json({ error: "Invalid message data" });
     }
   });
+
+  // Helper function for fallback responses
+  function generateFallbackResponse(message: string, character: any) {
+    const fallbackResponses = [
+      "That's interesting! Tell me more.",
+      "I love chatting with you!",
+      "You always know what to say.",
+      "Thanks for sharing that with me.",
+      "I'm enjoying our conversation!",
+      `${character?.name || 'I'} appreciate${character?.name ? 's' : ''} talking with you.`
+    ];
+    
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+      return `Hello there! I'm ${character?.name || 'here'} and I'm happy to chat with you!`;
+    } else if (lowerMessage.includes('how are you')) {
+      return "I'm doing great, thanks for asking! How are you today?";
+    } else if (lowerMessage.includes('love') || lowerMessage.includes('like')) {
+      return "That's so sweet of you to say! 💕";
+    }
+    
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+  }
 
   app.delete("/api/chat/:userId/:characterId?", async (req, res) => {
     try {
