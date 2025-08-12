@@ -68,7 +68,7 @@ export interface IStorage {
   updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined>;
   deleteMediaFile(id: string): Promise<void>;
   assignMediaToCharacter(mediaId: string, characterId: string): Promise<void>;
-  
+
   // Admin methods
   getAllUsers(): Promise<User[]>;
 }
@@ -660,7 +660,7 @@ export class MemStorage implements IStorage {
   private events: Map<string, any> = new Map();
 
   async getActiveEvents(): Promise<any[]> {
-    return Array.from(this.events.values()).filter(event => 
+    return Array.from(this.events.values()).filter(event =>
       new Date(event.startDate) <= new Date() && new Date(event.endDate) >= new Date()
     );
   }

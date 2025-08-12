@@ -150,8 +150,18 @@ export default function Game() {
       return data;
     },
     onSuccess: (data) => {
+      // Force refresh user data to get updated points
       queryClient.invalidateQueries({ queryKey: ["/api/user", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/upgrades", MOCK_USER_ID] });
+      
+      // Show success message with points earned
+      if (data.pointsEarned) {
+        toast({
+          title: "Points Earned!",
+          description: `+${data.pointsEarned} Lust Points`,
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -249,7 +259,7 @@ export default function Game() {
           <div className="text-right relative">
             <div className="text-white">
               <div className="text-sm">LP per Hour</div>
-              <div className="text-lg font-bold text-green-400">+{stats?.pointsPerSecond ? (stats.pointsPerSecond * 3600).toLocaleString() : "1303"}</div>
+              <div className="text-lg font-bold text-green-400">+{user?.hourlyRate?.toLocaleString() || "0"}</div>
             </div>
             <div className="flex items-center justify-end space-x-4 mt-2">
               <div className="flex items-center space-x-1">

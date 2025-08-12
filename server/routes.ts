@@ -228,28 +228,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate points per tap (base 125 + upgrades)
       const upgrades = await storage.getUserUpgrades(userId);
-      const tapBonus = upgrades.reduce((sum, upgrade) => sum + upgrade.tapBonus, 0);
+      const tapBonus = upgrades.reduce((sum, upgrade) => sum + (upgrade.tapBonus * upgrade.level), 0);
       const pointsPerTap = 125 + tapBonus;
+
+      const newPoints = user.points + pointsPerTap;
+      const newEnergy = Math.max(0, user.energy - 1);
 
       // Update user
       await storage.updateUser(userId, {
-        points: user.points + pointsPerTap,
-        energy: Math.max(0, user.energy - 1)
+        points: newPoints,
+        energy: newEnergy
       });
 
       // Update stats
       const stats = await storage.getUserStats(userId);
       await storage.updateUserStats(userId, {
         totalTaps: stats.totalTaps + 1,
-        totalEarned: stats.totalEarned + pointsPerTap
+        totalEarned: stats.totalEarned + pointsPerTap,
+        totalPoints: newPoints
       });
 
       res.json({
         pointsEarned: pointsPerTap,
-        newPoints: user.points + pointsPerTap,
-        newEnergy: Math.max(0, user.energy - 1)
+        newPoints: newPoints,
+        newEnergy: newEnergy,
+        points: newPoints,
+        energy: newEnergy
       });
     } catch (error) {
+      console.error('Tap error:', error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
