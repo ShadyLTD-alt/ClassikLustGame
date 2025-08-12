@@ -13,7 +13,7 @@ import CharacterDisplay from "@/components/CharacterDisplay";
 import UpgradeModal from "@/components/UpgradeModal";
 //import ChatModal from "@/components/ChatModal";
 import EnhancedChatModal from "@/components/EnhancedChatModal";
-import { AdminPanel } from "@/components/AdminPanelSimple";
+import AdminPanelFull from "@/components/AdminPanelFull";
 import WheelModal from "@/components/WheelModal";
 import AchievementsModal from "@/components/AchievementsModal";
 import VIPModal from "@/components/VIPModal";
@@ -592,7 +592,7 @@ export default function Game() {
         user={user}
       />
 
-      <AdminPanel
+      <AdminPanelFull
         isOpen={showAdminPanel}
         onClose={() => setShowAdminPanel(false)}
       />
