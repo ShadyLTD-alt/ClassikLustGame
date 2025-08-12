@@ -109,6 +109,21 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
     formData.append('category', uploadCategory);
     formData.append('fileType', uploadCategory);
 
+    // Add advanced properties
+    const requiredLevel = (document.getElementById('requiredLevel') as HTMLInputElement)?.value || '1';
+    const chatSendChance = (document.getElementById('chatSendChance') as HTMLInputElement)?.value || '5';
+    const isNsfw = (document.getElementById('isNsfw') as HTMLInputElement)?.checked || false;
+    const isVipOnly = (document.getElementById('isVipOnly') as HTMLInputElement)?.checked || false;
+    const isEventOnly = (document.getElementById('isEventOnly') as HTMLInputElement)?.checked || false;
+    const isWheelReward = (document.getElementById('isWheelReward') as HTMLInputElement)?.checked || false;
+
+    formData.append('requiredLevel', requiredLevel);
+    formData.append('chatSendChance', chatSendChance);
+    formData.append('isNsfw', isNsfw.toString());
+    formData.append('isVipOnly', isVipOnly.toString());
+    formData.append('isEventOnly', isEventOnly.toString());
+    formData.append('isWheelReward', isWheelReward.toString());
+
     uploadMutation.mutate(formData);
   };
 
@@ -190,7 +205,7 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
           />
 
           {selectedFiles && selectedFiles.length > 0 && (
-            <div className="border border-white/20 rounded-lg p-4">
+            <div className="border border-white/20 rounded-lg p-4 space-y-4">
               <div className="text-white mb-2">
                 Selected Files ({selectedFiles.length}):
               </div>
@@ -201,10 +216,78 @@ export default function ImageManager({ isOpen, onClose }: ImageManagerProps) {
                   </div>
                 ))}
               </div>
+
+              {/* Advanced Image Properties */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/20 pt-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Required Level to Unlock
+                  </label>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    max="100" 
+                    defaultValue="1"
+                    className="bg-black/30 border-white/20 text-white"
+                    id="requiredLevel"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Random Chat Send Chance (%)
+                  </label>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    max="100" 
+                    defaultValue="5"
+                    className="bg-black/30 border-white/20 text-white"
+                    id="chatSendChance"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isNsfw" 
+                    className="rounded border-white/20 bg-black/30 text-purple-600 focus:ring-purple-500"
+                  />
+                  <label htmlFor="isNsfw" className="text-white text-sm">NSFW Content</label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isVipOnly" 
+                    className="rounded border-white/20 bg-black/30 text-purple-600 focus:ring-purple-500"
+                  />
+                  <label htmlFor="isVipOnly" className="text-white text-sm">VIP Only</label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isEventOnly" 
+                    className="rounded border-white/20 bg-black/30 text-purple-600 focus:ring-purple-500"
+                  />
+                  <label htmlFor="isEventOnly" className="text-white text-sm">Event Only</label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isWheelReward" 
+                    className="rounded border-white/20 bg-black/30 text-purple-600 focus:ring-purple-500"
+                  />
+                  <label htmlFor="isWheelReward" className="text-white text-sm">Wheel Reward</label>
+                </div>
+              </div>
+
               <Button
                 onClick={handleUpload}
                 disabled={uploadMutation.isPending}
-                className="mt-4 bg-green-600 hover:bg-green-700"
+                className="mt-4 bg-green-600 hover:bg-green-700 w-full"
               >
                 {uploadMutation.isPending ? "Uploading..." : "Upload Files"}
               </Button>

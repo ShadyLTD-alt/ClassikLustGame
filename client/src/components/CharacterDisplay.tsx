@@ -30,7 +30,7 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
   return (
     <div className="px-4 pb-6">
       <div className="relative bg-black/20 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
-        
+
         {/* Character Info */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold gradient-text">{character.name}</h2>
@@ -44,27 +44,34 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
 
         {/* Character Image Container */}
         <div className="relative mx-auto w-64 h-80 mb-6">
-          <img 
-            src={character.imageUrl || '/api/placeholder-image'} 
+          <img
+            src={character.imageUrl || character.avatarUrl || '/api/placeholder-image'}
             alt={character.name}
-            className={`w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float ${
-              tapEffect ? 'tap-effect' : ''
-            } ${user.energy <= 0 ? 'grayscale opacity-50' : ''}`}
+            className="w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float"
             onClick={handleTap}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src !== "/api/placeholder-image") {
+                target.src = "/api/placeholder-image";
+              }
+            }}
             style={{
               filter: user.energy <= 0 ? 'grayscale(100%)' : 'none'
             }}
+            className={`w-full h-full object-cover rounded-2xl shadow-2xl cursor-pointer transform hover:scale-105 transition-transform duration-200 animate-float ${
+              tapEffect ? 'tap-effect' : ''
+            } ${user.energy <= 0 ? 'grayscale opacity-50' : ''}`}
           />
-          
+
           {/* Tap Effect Overlay */}
-          <div 
+          <div
             className={`absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl transition-opacity duration-200 pointer-events-none ${
               tapEffect ? 'opacity-100' : 'opacity-0'
             }`}
           />
-          
+
           {/* Floating Hearts */}
-          <div 
+          <div
             className={`absolute top-4 right-4 transition-opacity duration-200 ${
               tapEffect ? 'opacity-100 animate-bounce' : 'opacity-0'
             }`}
@@ -91,8 +98,8 @@ export default function CharacterDisplay({ character, user, stats, onTap, isTapp
             <span>{user.energy}/{user.maxEnergy}</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-3">
-            <div 
-              className="energy-bar h-3 rounded-full transition-all duration-300" 
+            <div
+              className="energy-bar h-3 rounded-full transition-all duration-300"
               style={{ width: `${energyPercentage}%` }}
             />
           </div>

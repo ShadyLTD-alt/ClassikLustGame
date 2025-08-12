@@ -80,7 +80,7 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
       likes: character?.likes ?? "",
       dislikes: character?.dislikes ?? "",
       requiredLevel: character?.requiredLevel ?? 1,
-      level: 1,
+      level: character?.level ?? 1,
       responseTimeMin: character?.responseTimeMin ?? 1,
       responseTimeMax: character?.responseTimeMax ?? 3,
       responseTimeMs: character?.responseTimeMs ?? 2000,
@@ -90,7 +90,7 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
       isEvent: character?.isEvent ?? false,
       isWheelReward: character?.isWheelReward ?? false,
       randomPictureSending: character?.randomPictureSending ?? false,
-      moodDistribution: {
+      moodDistribution: character?.moodDistribution || {
         normal: 70,
         happy: 20,
         flirty: 10,
@@ -98,11 +98,54 @@ export default function CharacterEditor({ character, isEditing = false, onSucces
         mysterious: 0,
         shy: 0,
       },
-      customTriggerWords: [],
-      customGreetings: [],
-      customResponses: [],
+      customTriggerWords: character?.customTriggerWords || [],
+      customGreetings: character?.customGreetings || [],
+      customResponses: character?.customResponses || [],
     },
   });
+
+  // Update form when character data changes
+  useEffect(() => {
+    if (character) {
+      form.reset({
+        name: character.name ?? "",
+        bio: character.bio ?? "",
+        backstory: character.backstory ?? "",
+        interests: character.interests ?? "",
+        quirks: character.quirks ?? "",
+        description: character.description ?? "",
+        imageUrl: character.imageUrl ?? "",
+        avatarUrl: character.avatarUrl ?? "",
+        personality: character.personality ?? "friendly",
+        personalityStyle: character.personalityStyle ?? "Sweet & Caring",
+        chatStyle: character.chatStyle ?? "casual",
+        likes: character.likes ?? "",
+        dislikes: character.dislikes ?? "",
+        requiredLevel: character.requiredLevel ?? 1,
+        level: character.level ?? 1,
+        responseTimeMin: character.responseTimeMin ?? 1,
+        responseTimeMax: character.responseTimeMax ?? 3,
+        responseTimeMs: character.responseTimeMs ?? 2000,
+        pictureSendChance: character.pictureSendChance ?? 5,
+        isNsfw: character.isNsfw ?? false,
+        isVip: character.isVip ?? false,
+        isEvent: character.isEvent ?? false,
+        isWheelReward: character.isWheelReward ?? false,
+        randomPictureSending: character.randomPictureSending ?? false,
+        moodDistribution: character.moodDistribution || {
+          normal: 70,
+          happy: 20,
+          flirty: 10,
+          playful: 0,
+          mysterious: 0,
+          shy: 0,
+        },
+        customTriggerWords: character.customTriggerWords || [],
+        customGreetings: character.customGreetings || [],
+        customResponses: character.customResponses || [],
+      });
+    }
+  }, [character, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: CharacterEditForm) => {

@@ -591,7 +591,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             path: `/uploads/${path.basename(processedPath)}`,
             characterId: characterId || null,
             uploadedBy: userId || 'anonymous',
-            fileType: req.body.fileType || req.body.category || 'image'
+            fileType: req.body.fileType || req.body.category || 'image',
+            isNsfw: req.body.isNsfw === 'true',
+            requiredLevel: parseInt(req.body.requiredLevel) || 1,
+            chatSendChance: parseInt(req.body.chatSendChance) || 5,
+            isVipOnly: req.body.isVipOnly === 'true',
+            isEventOnly: req.body.isEventOnly === 'true',
+            isWheelReward: req.body.isWheelReward === 'true'
           };
 
           const savedFile = await storage.uploadMedia({
@@ -807,7 +813,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/character/:id", async (req, res) => {
     try {
       console.log(`Updating character ${req.params.id} with:`, req.body);
-      const character = await storage.updateCharacter(req.params.id, req.body);
+      
+      // Ensure data is properly formatted
+      const updateData = {
+        ...req.body,
+        moodDistribution: req.body.moodDistribution || {
+          normal: 70,
+          happy: 20,
+          flirty: 10,
+          playful: 0,
+          mysterious: 0,
+          shy: 0,
+        },
+        customTriggerWords: req.body.customTriggerWords || [],
+        customGreetings: req.body.customGreetings || [],
+        customResponses: req.body.customResponses || [],
+      };
+      
+      const character = await storage.updateCharacter(req.params.id, updateData);
       if (!character) {
         return res.status(404).json({ error: "Character not found" });
       }

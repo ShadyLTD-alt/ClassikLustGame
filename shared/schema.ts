@@ -131,6 +131,11 @@ export const mediaFiles = pgTable("mediaFiles", {
   tags: jsonb("tags").default([]),
   description: text("description"),
   isNsfw: boolean("isNsfw").default(false),
+  requiredLevel: integer("requiredLevel").default(1),
+  chatSendChance: integer("chatSendChance").default(5),
+  isVipOnly: boolean("isVipOnly").default(false),
+  isEventOnly: boolean("isEventOnly").default(false),
+  isWheelReward: boolean("isWheelReward").default(false),
   createdAt: timestamp("createdAt").notNull().default(sql`now()`)
 });
 

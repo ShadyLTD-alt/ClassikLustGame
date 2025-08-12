@@ -98,7 +98,7 @@ export default function AICustomFunctions({ isOpen, onClose, characterId = "" }:
   const [newTrait, setNewTrait] = useState("");
   const [newPreferredTopic, setNewPreferredTopic] = useState("");
   const [newAvoidedTopic, setNewAvoidedTopic] = useState("");
-  
+
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -170,6 +170,9 @@ export default function AICustomFunctions({ isOpen, onClose, characterId = "" }:
     }
   };
 
+  // Ensure personalityTraits is always an array
+  const personalityTraits = aiSettings.personalityTraits || defaultAISettings.personalityTraits;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-purple-900 text-white border-purple-500/30">
@@ -228,7 +231,7 @@ export default function AICustomFunctions({ isOpen, onClose, characterId = "" }:
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {aiSettings.personalityTraits.map((trait, index) => (
+                  {personalityTraits.map((trait: any, index: number) => (
                     <Badge key={index} variant="secondary" className="bg-purple-600/20 text-purple-300 border-purple-500/30">
                       {trait}
                       <Button
