@@ -164,7 +164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customResponses: [],
         });
         
-        // Character selection is handled through userCharacters table
+        // Properly select the character for this user
+        await storage.selectCharacter(user.id, defaultCharacter.id);
         console.log('Created default character and set as selected:', defaultCharacter.id);
       }
       
