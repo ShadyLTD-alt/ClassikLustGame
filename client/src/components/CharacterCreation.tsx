@@ -405,11 +405,10 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               ))}
                             </SelectContent>
                           </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                   {/* Mood */}
                   <FormField
