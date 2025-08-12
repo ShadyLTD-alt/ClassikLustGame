@@ -355,6 +355,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎭 Create New Character
             </DialogTitle>
+            <DialogDescription>
+              Create and customize a new character for your game.
+            </DialogDescription>
           </DialogHeader>
           <CharacterCreation 
             isOpen={showCharacterCreationState} 
@@ -369,6 +372,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               📷 Image Manager
             </DialogTitle>
+            <DialogDescription>
+              Upload, manage and organize your game images and media files.
+            </DialogDescription>
           </DialogHeader>
           <ImageManager 
             isOpen={showImageManager} 
@@ -383,6 +389,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎡 Wheel Game Management
             </DialogTitle>
+            <DialogDescription>
+              Configure wheel prizes, spin costs, and reward settings.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
             <Card className="admin-card bg-black/20 backdrop-blur-sm border-purple-500/30">

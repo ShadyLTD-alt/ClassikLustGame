@@ -373,3 +373,31 @@
 .animate-pulse-slow {
   animation: pulse 2s infinite;
 }
+
+/* Remove tap highlights and improve touch interactions */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Prevent dialog close on background click */
+[data-radix-overlay] {
+  pointer-events: auto !important;
+}
+
+/* Better dialog styling */
+[data-radix-dialog-content] {
+  pointer-events: auto !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Disable dialog overlay pointer events to prevent accidental closes */
+.DialogOverlay {
+  pointer-events: none !important;
+}

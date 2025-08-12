@@ -397,7 +397,7 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No avatar selected</SelectItem>
+                              <SelectItem value="">Select avatar</SelectItem>
                               {mediaFiles.map((file: any) => (
                                 <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
                                   {file.originalName || file.filename} - {file.fileType || 'image'}
@@ -405,11 +405,41 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Mood */}
+                  <FormField
+                    control={form.control}
+                    name="personality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Mood/Personality</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-black/30 border-white/20 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">Select a mood</SelectItem>
+                              <SelectItem value="neutral">Neutral</SelectItem>
+                              <SelectItem value="happy">Happy</SelectItem>
+                              <SelectItem value="flirty">Flirty</SelectItem>
+                              <SelectItem value="shy">Shy</SelectItem>
+                              <SelectItem value="confident">Confident</SelectItem>
+                              <SelectItem value="mysterious">Mysterious</SelectItem>
+                              <SelectItem value="playful">Playful</SelectItem>
+                              <SelectItem value="romantic">Romantic</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
