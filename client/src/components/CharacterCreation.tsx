@@ -364,21 +364,21 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Main Image</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select main image" />
                               </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">Select main image</SelectItem>
-                              {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
-                                  {file.originalName || file.filename} - {file.fileType || 'image'}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                              <SelectContent>
+                                <SelectItem value="none">Select main image</SelectItem>
+                                {mediaFiles.map((file: any) => (
+                                  <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
+                                    {file.originalName || file.filename} - {file.fileType || 'image'}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -390,21 +390,21 @@ export default function CharacterCreation({ isOpen, onClose, editingCharacter }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Avatar Image</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
+                          <FormControl>
+                            <Select value={field.value || ""} onValueChange={field.onChange}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select avatar" />
                               </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="">Select avatar</SelectItem>
-                              {mediaFiles.map((file: any) => (
-                                <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
-                                  {file.originalName || file.filename} - {file.fileType || 'image'}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                              <SelectContent>
+                                <SelectItem value="">Select avatar</SelectItem>
+                                {mediaFiles.map((file: any) => (
+                                  <SelectItem key={file.id || file.filename} value={file.url || file.path || `/uploads/${file.filename}`}>
+                                    {file.originalName || file.filename} - {file.fileType || 'image'}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
