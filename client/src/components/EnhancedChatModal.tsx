@@ -80,8 +80,8 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
     if (chatHistory && chatHistory.length > 0) {
       const formattedMessages = chatHistory.map((msg: any) => ({
         id: msg.id,
-        content: msg.content,
-        sender: msg.senderId === user.id ? 'user' : 'character',
+        content: msg.message || msg.content,  // Try both message and content fields
+        sender: msg.isFromUser ? 'user' : 'character',  // Use isFromUser field
         timestamp: new Date(msg.createdAt),
         type: msg.type || 'text',
         mood: msg.mood,
@@ -117,51 +117,51 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
       const response = await apiRequest("POST", "/api/chat/send", {
         characterId,
         userId: user.id,
-        content: message,
+        message: message,  // Changed from 'content' to 'message'
         mood: selectedMood,
       });
       return response.json();
     },
     onSuccess: (data) => {
-      // Add user message
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        content: currentMessage,
-        sender: 'user',
-        timestamp: new Date(),
-        type: 'text',
-        mood: selectedMood,
-      };
+      // Clear the input immediately
+      setCurrentMessage("");
 
-      // Add character response with realistic delay
-      setIsTyping(true);
-      setMessages(prev => [...prev, userMessage]);
-
-      setTimeout(() => {
-        const characterMessage: ChatMessage = {
-          id: data.id || (Date.now() + 1).toString(),
-          content: data.response || generateSmartResponse(currentMessage),
-          sender: 'character',
-          timestamp: new Date(),
+      // Add user message from API response
+      if (data.userMessage) {
+        const userMessage: ChatMessage = {
+          id: data.userMessage.id,
+          content: data.userMessage.message,
+          sender: 'user',
+          timestamp: new Date(data.userMessage.createdAt),
           type: 'text',
-          mood: data.mood || getRandomMood(),
-          reactionScore: data.reactionScore || Math.floor(Math.random() * 10) + 1,
+          mood: selectedMood,
         };
+        setMessages(prev => [...prev, userMessage]);
+      }
 
+      // Add AI response from API
+      if (data.aiResponse) {
+        const characterMessage: ChatMessage = {
+          id: data.aiResponse.id,
+          content: data.aiResponse.message,
+          sender: 'character',
+          timestamp: new Date(data.aiResponse.createdAt),
+          type: 'text',
+          mood: getRandomMood(),
+          reactionScore: Math.floor(Math.random() * 10) + 1,
+        };
         setMessages(prev => [...prev, characterMessage]);
         setCharacterMood(characterMessage.mood || 'normal');
-        setIsTyping(false);
-
+        
         // Update relationship points
-        if (data.pointsEarned) {
-          toast({
-            title: "Relationship +1",
-            description: `You gained ${data.pointsEarned} relationship points!`,
-          });
-        }
-      }, Math.random() * 2000 + 1000);
+        toast({
+          title: "AI Response Received",
+          description: `${characterName} responded using AI!`,
+        });
+      }
 
-      setCurrentMessage("");
+      // Invalidate chat history to refresh
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/history", characterId, user.id] });
     },
     onError: () => {
       // Fallback to local response generation

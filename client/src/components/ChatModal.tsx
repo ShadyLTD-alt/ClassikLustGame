@@ -86,6 +86,7 @@ export default function ChatModal({ isOpen, onClose, characterId, characterName,
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-gray-800 to-gray-900 text-white border-none max-w-sm p-0 rounded-3xl overflow-hidden h-[600px] flex flex-col">
         <DialogTitle className="sr-only">Chat with {characterName}</DialogTitle>
+        <DialogDescription className="sr-only">Interactive chat conversation with {characterName}</DialogDescription>
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-black/20 border-b border-white/10">
