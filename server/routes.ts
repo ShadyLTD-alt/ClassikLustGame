@@ -390,6 +390,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin upgrade management
+  app.get("/api/admin/upgrades", async (req, res) => {
+    try {
+      const upgrades = Array.from((storage as any).upgrades.values());
+      res.json(upgrades);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/upgrades", async (req, res) => {
+    try {
+      const upgradeData = insertUpgradeSchema.parse(req.body);
+      const upgrade = await storage.createUpgrade(upgradeData);
+      res.json(upgrade);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid upgrade data" });
+    }
+  });
+
+  app.patch("/api/admin/upgrades/:id", async (req, res) => {
+    try {
+      const upgrade = await storage.updateUpgrade(req.params.id, req.body);
+      if (!upgrade) {
+        return res.status(404).json({ error: "Upgrade not found" });
+      }
+      res.json(upgrade);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/upgrades/:id", async (req, res) => {
+    try {
+      (storage as any).upgrades.delete(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Admin wheel prize management
+  app.get("/api/admin/wheel-prizes", async (req, res) => {
+    try {
+      const settings = await storage.getGameSettings();
+      res.json(settings.wheelRewards || []);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/wheel-prizes", async (req, res) => {
+    try {
+      const { type, min, max, probability, label } = req.body;
+      const settings = await storage.getGameSettings();
+      const newPrize = {
+        id: randomUUID(),
+        type,
+        min: min || 0,
+        max: max || 0,
+        probability: probability || 0.1,
+        label: label || type
+      };
+      
+      const updatedRewards = [...(settings.wheelRewards as any[]), newPrize];
+      await storage.updateGameSettings({ wheelRewards: updatedRewards });
+      res.json(newPrize);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid prize data" });
+    }
+  });
+
+  app.delete("/api/admin/wheel-prizes/:id", async (req, res) => {
+    try {
+      const settings = await storage.getGameSettings();
+      const updatedRewards = (settings.wheelRewards as any[]).filter((prize: any) => prize.id !== req.params.id);
+      await storage.updateGameSettings({ wheelRewards: updatedRewards });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/media", async (req, res) => {
     try {
       const media = await storage.getMediaFiles();

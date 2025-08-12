@@ -162,13 +162,7 @@ export default function Game() {
       queryClient.invalidateQueries({ queryKey: ["/api/stats", MOCK_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/upgrades", MOCK_USER_ID] });
 
-      // Show success message with points earned
-      if (data.pointsEarned) {
-        toast({
-          title: "Points Earned!",
-          description: `+${data.pointsEarned} Lust Points`,
-        });
-      }
+      // Removed toast notification as requested - using floating hearts instead
     },
     onError: (error: any) => {
       toast({

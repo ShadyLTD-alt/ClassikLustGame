@@ -46,6 +46,9 @@ export interface IStorage {
   getUserStats(userId: string): Promise<GameStats>;
   updateUserStats(userId: string, updates: Partial<GameStats>): Promise<void>;
 
+  // Upgrade system
+  upgradeUserUpgrade(userId: string, upgradeId: string): Promise<Upgrade>;
+
   // Chat system
   getChatMessages(userId: string, characterId?: string): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
@@ -524,6 +527,50 @@ export class MemStorage implements IStorage {
     return updatedUpgrade;
   }
 
+  async upgradeUserUpgrade(userId: string, upgradeId: string): Promise<Upgrade> {
+    const upgrade = this.upgrades.get(upgradeId);
+    const user = await this.getUser(userId);
+    
+    if (!upgrade) {
+      throw new Error("Upgrade not found");
+    }
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Check if user can afford the upgrade
+    const upgradeCost = upgrade.cost * Math.pow(1.5, upgrade.level - 1); // Scaling cost
+    if (user.points < upgradeCost) {
+      throw new Error("Not enough points");
+    }
+
+    // Check level requirements
+    if (user.level < upgrade.requiredLevel) {
+      throw new Error("Level requirement not met");
+    }
+
+    // Check if upgrade is at max level
+    if (upgrade.level >= upgrade.maxLevel) {
+      throw new Error("Upgrade already at maximum level");
+    }
+
+    // Deduct points and upgrade
+    await this.updateUser(userId, {
+      points: user.points - upgradeCost,
+      pointsPerSecond: user.pointsPerSecond + upgrade.hourlyBonus
+    });
+
+    // Level up the upgrade
+    const updatedUpgrade = {
+      ...upgrade,
+      level: upgrade.level + 1
+    };
+    this.upgrades.set(upgradeId, updatedUpgrade);
+
+    return updatedUpgrade;
+  }
+
   async getUserStats(userId: string): Promise<GameStats> {
     const stats = this.gameStats.get(userId);
     if (!stats) {
@@ -672,6 +719,75 @@ export class MemStorage implements IStorage {
       mediaFiles: Array.from(this.mediaFiles.values()),
       gameSettings: this.gameSettings
     };
+  }
+
+  // Media management methods
+  async getAllMedia(): Promise<MediaFile[]> {
+    return Array.from(this.mediaFiles.values());
+  }
+
+  async getMediaFiles(characterId?: string): Promise<MediaFile[]> {
+    const allFiles = Array.from(this.mediaFiles.values());
+    if (characterId) {
+      return allFiles.filter(file => file.characterId === characterId);
+    }
+    return allFiles;
+  }
+
+  async getMediaFile(id: string): Promise<MediaFile | undefined> {
+    return this.mediaFiles.get(id);
+  }
+
+  async saveMediaFile(file: MediaFile): Promise<MediaFile> {
+    this.mediaFiles.set(file.id, file);
+    return file;
+  }
+
+  async uploadMedia(file: any): Promise<MediaFile> {
+    const mediaFile: MediaFile = {
+      id: randomUUID(),
+      filename: file.filename,
+      originalName: file.originalName || file.filename,
+      mimeType: file.mimeType || 'image/jpeg',
+      size: file.size || 0,
+      fileType: file.fileType || 'image',
+      url: file.url,
+      path: file.path || file.url,
+      characterId: file.characterId || null,
+      uploadedBy: file.uploadedBy || 'system',
+      tags: file.tags || [],
+      description: file.description || null,
+      isNsfw: file.isNsfw || false,
+      requiredLevel: file.requiredLevel || 1,
+      chatSendChance: file.chatSendChance || 5,
+      isVipOnly: file.isVipOnly || false,
+      isEventOnly: file.isEventOnly || false,
+      isWheelReward: file.isWheelReward || false,
+      createdAt: new Date()
+    };
+    this.mediaFiles.set(mediaFile.id, mediaFile);
+    return mediaFile;
+  }
+
+  async updateMediaFile(id: string, updates: Partial<MediaFile>): Promise<MediaFile | undefined> {
+    const file = this.mediaFiles.get(id);
+    if (!file) return undefined;
+
+    const updatedFile = { ...file, ...updates };
+    this.mediaFiles.set(id, updatedFile);
+    return updatedFile;
+  }
+
+  async deleteMediaFile(id: string): Promise<void> {
+    this.mediaFiles.delete(id);
+  }
+
+  async assignMediaToCharacter(mediaId: string, characterId: string): Promise<void> {
+    const file = this.mediaFiles.get(mediaId);
+    if (file) {
+      file.characterId = characterId;
+      this.mediaFiles.set(mediaId, file);
+    }
   }
 }
 

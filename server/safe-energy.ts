@@ -1,17 +1,16 @@
-import * as storage from './storage';
+import { storage } from './storage';
 
 const ENERGY_REGEN_INTERVAL = 60 * 1000; // 1 min
 let energyInterval: NodeJS.Timeout | null = null;
 
-function regenerateEnergy() {
+async function regenerateEnergy() {
   try {
-    if (!storage.isDBReady()) {
-      console.warn('[Energy Regen] DB not ready, skipping...');
-      return;
-    }
-    const users = storage.getAllUsers();
+    const users = await storage.getAllUsers();
     for (const user of users) {
-      storage.updateUserEnergy(user.id);
+      if (user.energy < user.maxEnergy) {
+        const newEnergy = Math.min(user.maxEnergy, user.energy + 5);
+        await storage.updateUser(user.id, { energy: newEnergy });
+      }
     }
     console.log(`[Energy Regen] Updated ${users.length} users`);
   } catch (err) {

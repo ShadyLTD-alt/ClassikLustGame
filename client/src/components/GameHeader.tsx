@@ -24,40 +24,60 @@ export default function GameHeader({ user }: GameHeaderProps) {
               👤
             </div>
           </Button>
-          <div className="text-sm">
-            <span className="text-gray-300">LV.</span>
-            <span className="ml-1 font-bold text-pink-400 text-lg">{user.level}</span>
+          
+          {/* New Layout: Level on left, Lust Points in center box, LP per Hour on right */}
+          <div className="flex items-center space-x-6">
+            <div className="text-sm">
+              <span className="text-gray-300">LV.</span>
+              <span className="ml-1 font-bold text-pink-400 text-lg">{user.level}</span>
+            </div>
+            
+            {/* Lust Points in framed box */}
+            <div className="bg-gradient-to-r from-purple-700/50 to-pink-700/50 border border-pink-500/30 rounded-lg px-4 py-2">
+              <div className="text-sm text-center">
+                <span className="text-gray-300">💰</span>
+                <span className="ml-1 font-bold text-yellow-400">{user.points.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div className="text-sm">
+              <span className="text-gray-300">LP/Hr</span>
+              <span className="ml-1 font-bold text-green-400">{user.pointsPerSecond * 3600}</span>
+            </div>
           </div>
-        <div className="text-sm">
-          <span className="text-gray-300">💰</span>
-          <span className="ml-1 font-bold text-yellow-400">{user.points.toLocaleString()}</span>
         </div>
-        <div className="text-sm">
-          <span className="text-gray-300">⚡</span>
-          <span className="ml-1 font-bold text-blue-400">{user.energy}/{user.maxEnergy}</span>
-        </div>
-      </div>
+        
+        {/* Energy moved to right side, under the top box */}
+        <div className="flex flex-col items-end space-y-1">
+          <div className="flex items-center space-x-3">
+            {user.isAdmin && (
+              <Link href="/admin">
+                <Button
+                  variant="ghost"
+                  className="text-red-400 hover:bg-red-900/50 hover:text-red-300 p-2 rounded-lg transition-colors"
+                  title="Admin Panel"
+                >
+                  🛡️
+                </Button>
+              </Link>
+            )}
 
-      <div className="flex items-center space-x-3">
-        {user.isAdmin && (
-          <Link href="/admin">
             <Button
               variant="ghost"
-              className="text-red-400 hover:bg-red-900/50 hover:text-red-300 p-2 rounded-lg transition-colors"
-              title="Admin Panel"
+              className="text-white hover:bg-purple-700/50 p-2 rounded-lg transition-colors"
             >
-              🛡️
+              ⚙️
             </Button>
-          </Link>
-        )}
+          </div>
+          
+          {/* Energy display moved here */}
+          <div className="text-sm">
+            <span className="text-gray-300">⚡</span>
+            <span className="ml-1 font-bold text-blue-400">{user.energy}/{user.maxEnergy}</span>
+          </div>
+        </div>
 
-        <Button
-          variant="ghost"
-          className="text-white hover:bg-purple-700/50 p-2 rounded-lg transition-colors"
-        >
-          ⚙️
-        </Button>
-      </div>
+
     </header>
 
     <CharacterGallery 
