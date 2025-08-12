@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import CharacterCreation from "@/components/CharacterCreation";
+import CharacterEditor from "@/components/CharacterEditor";
 import ImageManager from "@/components/ImageManager";
 import AICustomFunctions from "@/components/AICustomFunctions";
 import LayoutEditor from "@/components/LayoutEditor";
@@ -328,16 +329,50 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
 
               <TabsContent value="character-editor" className="space-y-6">
                 {editingCharacter ? (
-                  <CharacterCreation 
-                    isOpen={true} 
-                    onClose={() => setEditingCharacter(null)}
-                    editingCharacter={editingCharacter}
+                  <CharacterEditor 
+                    character={editingCharacter}
+                    isEditing={true}
+                    onSuccess={() => {
+                      setEditingCharacter(null);
+                      toast({
+                        title: "Character Updated",
+                        description: "Character has been successfully updated!",
+                      });
+                    }}
+                    onCancel={() => setEditingCharacter(null)}
                   />
                 ) : (
                   <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white text-center">🎭 Character Editor</CardTitle>
+                    </CardHeader>
                     <CardContent className="pt-6">
-                      <div className="text-center text-white">
-                        <p>Select a character to edit from the Characters tab</p>
+                      <div className="text-center text-white space-y-4">
+                        <p>Configure and manage custom AI functions for your characters.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {characters.slice(0, 4).map((character) => (
+                            <Card key={character.id} className="bg-gray-700/50 border-gray-600 hover:bg-gray-600/50 transition-colors cursor-pointer" 
+                                  onClick={() => setEditingCharacter(character)}>
+                              <CardContent className="p-4 text-center">
+                                <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden">
+                                  <img 
+                                    src={character.imageUrl || '/api/placeholder-image'} 
+                                    alt={character.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="text-white font-medium">{character.name}</div>
+                                <div className="text-gray-400 text-sm">Level {character.requiredLevel}</div>
+                                <Button size="sm" className="mt-2 bg-purple-600 hover:bg-purple-700">
+                                  Edit AI Functions
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                        {characters.length === 0 && (
+                          <p className="text-gray-400">No characters available. Create some characters first.</p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -359,9 +394,10 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
               Create and customize a new character for your game.
             </DialogDescription>
           </DialogHeader>
-          <CharacterCreation 
-            isOpen={showCharacterCreationState} 
-            onClose={() => setShowCharacterCreationState(false)} 
+          <CharacterEditor 
+            isEditing={false}
+            onSuccess={() => setShowCharacterCreationState(false)}
+            onCancel={() => setShowCharacterCreationState(false)}
           />
         </DialogContent>
       </Dialog>
