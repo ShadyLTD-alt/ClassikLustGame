@@ -126,8 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customResponses: [],
         });
         
-        // Set the character as selected for the user
-        await storage.setSelectedCharacter(user.id, defaultCharacter.id);
+        // Character selection is handled through userCharacters table
         console.log('Created default character and set as selected:', defaultCharacter.id);
       }
       
@@ -335,7 +334,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat/send", async (req, res) => {
     try {
-      const messageData = insertChatMessageSchema.parse(req.body);
+      // Add isFromUser field to request body since it's always true for user messages
+      const messageData = insertChatMessageSchema.parse({
+        ...req.body,
+        isFromUser: true
+      });
       console.log('Chat send request:', messageData);
       
       const message = await storage.createChatMessage(messageData);

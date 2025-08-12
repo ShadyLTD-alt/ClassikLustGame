@@ -27,9 +27,11 @@ class MistralService {
   constructor() {
     this.config = {
       apiKey: process.env.MISTRAL_API_KEY || '',
-      model: 'mistral-small-latest',
-      debugModel: 'mistral-small-latest'
+      model: 'ft:ministral-3b-latest:0834440f:20250812:63a294f4', // Your custom trained model for character chat
+      debugModel: 'ag:0834440f:20250812:untitled-agent:d6ab8723' // Your agent model for debugging
     };
+    // Auto-enable when API key is available
+    this.enabled = !!this.config.apiKey;
   }
 
   setEnabled(enabled: boolean) {
@@ -139,7 +141,7 @@ Respond in character with a natural, engaging message. Keep it conversational an
       const data = await response.json() as any;
       console.log('Mistral API response data:', data);
       return data.choices[0]?.message?.content || 'No response generated.';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Mistral API call error:', error);
       throw error;
     }
