@@ -59,6 +59,7 @@ export default function Game() {
   const [showVIPModal, setShowVIPModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAIControls, setShowAIControls] = useState(false);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [heartTriggers, setHeartTriggers] = useState<Array<{ amount: number; x: number; y: number }>>([]);
   const { toast } = useToast();
 
