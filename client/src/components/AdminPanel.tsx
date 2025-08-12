@@ -95,7 +95,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     personality: "friendly",
     requiredLevel: 1,
     isNsfw: false,
-    isVip: false
+    isVip: false,
+    isEvent: false,
+    isWheelReward: false
   });
 
   const { toast } = useToast();
@@ -197,7 +199,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
         personality: "friendly",
         requiredLevel: 1,
         isNsfw: false,
-        isVip: false
+        isVip: false,
+        isEvent: false,
+        isWheelReward: false
       });
     },
     onError: () => {
@@ -514,7 +518,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-center space-x-2">
                         <Switch 
                           id="nsfw"
@@ -530,6 +534,22 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           onCheckedChange={(checked) => setNewCharacter({...newCharacter, isVip: checked})}
                         />
                         <Label htmlFor="vip" className="text-white">VIP</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="event"
+                          checked={newCharacter.isEvent || false}
+                          onCheckedChange={(checked) => setNewCharacter({...newCharacter, isEvent: checked})}
+                        />
+                        <Label htmlFor="event" className="text-white">Event</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="wheel"
+                          checked={newCharacter.isWheelReward || false}
+                          onCheckedChange={(checked) => setNewCharacter({...newCharacter, isWheelReward: checked})}
+                        />
+                        <Label htmlFor="wheel" className="text-white">Wheel Reward</Label>
                       </div>
                     </div>
                     <Button 
