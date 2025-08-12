@@ -102,6 +102,9 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎮 ClassikLust Admin Panel
             </DialogTitle>
+            <DialogDescription className="text-white/70">
+              Manage users, characters, media, and game settings.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -475,7 +478,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎭 Create New Character
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/70">
               Create and customize a new character for your game.
             </DialogDescription>
           </DialogHeader>
@@ -493,7 +496,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               📷 Image Manager
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/70">
               Upload, manage and organize your game images and media files.
             </DialogDescription>
           </DialogHeader>
@@ -510,7 +513,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎡 Wheel Game Management
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/70">
               Configure wheel prizes, spin costs, and reward settings.
             </DialogDescription>
           </DialogHeader>
@@ -575,7 +578,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🧠 AI Custom Functions for {characters.find(char => char.id === selectedCharacterForAI)?.name || 'Selected Character'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/70">
               Configure and manage custom AI functions for your characters.
             </DialogDescription>
           </DialogHeader>
@@ -589,7 +592,7 @@ export default function AdminPanel({ isOpen, onClose, showCharacterCreation = fa
             <DialogTitle className="text-2xl font-bold text-white">
               🎨 Site Layout & Design Editor
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/70">
               Customize the visual appearance and layout of your entire site.
             </DialogDescription>
           </DialogHeader>
