@@ -48,6 +48,10 @@ const QUICK_RESPONSES = [
   "Want to play a game?",
 ];
 
+// Define MOCK_USER_ID as it's used in the original code context for game components, though not directly in this chat modal.
+// Assuming it's a placeholder that would be replaced by the actual user ID in a real game scenario.
+const MOCK_USER_ID = "mock-user-123"; 
+
 export default function EnhancedChatModal({ isOpen, onClose, characterId, characterName, user }: EnhancedChatModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -152,7 +156,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
         };
         setMessages(prev => [...prev, characterMessage]);
         setCharacterMood(characterMessage.mood || 'normal');
-        
+
         // Update relationship points
         toast({
           title: "AI Response Received",
@@ -291,6 +295,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900 text-white border-purple-500/30 p-0">
+        <DialogTitle className="sr-only">Chat with Character</DialogTitle>
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-pink-400">
