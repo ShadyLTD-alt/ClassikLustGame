@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -136,7 +136,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
       // Add character response with realistic delay
       setIsTyping(true);
       setMessages(prev => [...prev, userMessage]);
-      
+
       setTimeout(() => {
         const characterMessage: ChatMessage = {
           id: data.id || (Date.now() + 1).toString(),
@@ -147,11 +147,11 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
           mood: data.mood || getRandomMood(),
           reactionScore: data.reactionScore || Math.floor(Math.random() * 10) + 1,
         };
-        
+
         setMessages(prev => [...prev, characterMessage]);
         setCharacterMood(characterMessage.mood || 'normal');
         setIsTyping(false);
-        
+
         // Update relationship points
         if (data.pointsEarned) {
           toast({
@@ -181,7 +181,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
 
     setIsTyping(true);
     setMessages(prev => [...prev, userMessage]);
-    
+
     setTimeout(() => {
       const response = generateSmartResponse(currentMessage);
       const characterMessage: ChatMessage = {
@@ -193,7 +193,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
         mood: getRandomMood(),
         reactionScore: Math.floor(Math.random() * 10) + 1,
       };
-      
+
       setMessages(prev => [...prev, characterMessage]);
       setCharacterMood(characterMessage.mood || 'normal');
       setIsTyping(false);
@@ -204,32 +204,32 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
 
   const generateSmartResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
-    
+
     // Greeting responses
     if (input.includes('hi') || input.includes('hello') || input.includes('hey')) {
       return `Hey ${user.username}! *smiles warmly* I'm so happy to see you! How's your day going? ✨`;
     }
-    
+
     // Compliment responses
     if (input.includes('beautiful') || input.includes('pretty') || input.includes('cute')) {
       return "*blushes* Aww, thank you so much! You're so sweet! That really made my day! 😊💕";
     }
-    
+
     // How are you responses
     if (input.includes('how are you') || input.includes('how do you feel')) {
       return `I'm doing amazing now that I'm talking to you! *giggles* You always know how to brighten my mood! 😄`;
     }
-    
+
     // Questions about character
     if (input.includes('tell me about') || input.includes('what do you like')) {
       return `Oh, I love so many things! I enjoy cozy conversations like this, stargazing, and discovering new things about people I care about... like you! What about you? What makes you happy? 🌟`;
     }
-    
+
     // Flirty responses
     if (input.includes('love') || input.includes('like you') || input.includes('special')) {
       return "*heart flutters* You're making me feel all warm and fuzzy inside! I really enjoy our time together too... you're quite special yourself! 💖";
     }
-    
+
     // Default responses based on mood
     const responses = {
       normal: [
@@ -263,7 +263,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
         "*hides face behind hands* You're making me all flustered! 😊💕",
       ],
     };
-    
+
     const moodResponses = responses[characterMood as keyof typeof responses] || responses.normal;
     return moodResponses[Math.floor(Math.random() * moodResponses.length)];
   };
@@ -312,6 +312,9 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
               </div>
             </div>
           </DialogTitle>
+          <DialogDescription className="text-white/70">
+              Have conversations with your favorite character.
+            </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 p-6 pt-0">
@@ -367,7 +370,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
                       </div>
                     </div>
                   ))}
-                  
+
                   {isTyping && (
                     <div className="flex justify-start">
                       <div className="bg-gray-700 text-white rounded-r-lg rounded-tl-lg p-3 shadow-lg max-w-xs">
@@ -468,7 +471,7 @@ export default function EnhancedChatModal({ isOpen, onClose, characterId, charac
                     </Button>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gray-800/50 border-gray-600">
                   <CardContent className="p-4 text-center">
                     <Sparkles className="w-8 h-8 text-yellow-400 mx-auto mb-2" />

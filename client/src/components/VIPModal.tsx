@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 
 interface VIPModalProps {
   isOpen: boolean;
@@ -30,14 +31,14 @@ const VIP_PLANS = [
   },
   {
     id: "weekly",
-    title: "Weekly VIP", 
+    title: "Weekly VIP",
     price: "$19.99",
     duration: "7 days",
     badge: "Popular",
     color: "from-purple-500 to-pink-600",
     benefits: [
       "3x Lust Points",
-      "+100% Energy Regen", 
+      "+100% Energy Regen",
       "All Exclusive Content",
       "Priority Support",
       "Daily Bonus Gems"
@@ -49,7 +50,7 @@ const VIP_PLANS = [
   {
     id: "monthly",
     title: "Monthly VIP",
-    price: "$49.99", 
+    price: "$49.99",
     duration: "30 days",
     badge: "Best Value",
     color: "from-yellow-500 to-orange-600",
@@ -107,12 +108,12 @@ export default function VIPModal({ isOpen, onClose, userId }: VIPModalProps) {
     const now = new Date();
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
-    
+
     if (diff <= 0) return "Expired";
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days}d ${hours}h remaining`;
     return `${hours}h remaining`;
   };
@@ -120,26 +121,15 @@ export default function VIPModal({ isOpen, onClose, userId }: VIPModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white border-none max-w-md p-0 rounded-3xl overflow-hidden h-[700px] flex flex-col">
-        <DialogTitle className="sr-only">VIP Membership</DialogTitle>
-        
-        {/* Header */}
-        <div className="p-6 pb-0">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">👑</span>
-              <h2 className="text-2xl font-bold text-white">VIP Membership</h2>
-            </div>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              className="text-white hover:bg-white/20 p-1 h-8 w-8 rounded-full"
-              data-testid="button-close-vip"
-            >
-              ✕
-            </Button>
-          </div>
-          <p className="text-white/80 text-sm">Unlock exclusive content and enhanced gameplay</p>
-        </div>
+        <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white flex items-center justify-center">
+              <Star className="w-6 h-6 text-yellow-400 mr-2" />
+              VIP Membership
+            </DialogTitle>
+            <DialogDescription className="text-white/70 text-center">
+              Unlock exclusive features and premium benefits.
+            </DialogDescription>
+          </DialogHeader>
 
         {/* Current VIP Status */}
         {vipStatus?.isActive && (
@@ -176,10 +166,10 @@ export default function VIPModal({ isOpen, onClose, userId }: VIPModalProps) {
         {/* VIP Plans */}
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <h3 className="font-bold mb-4">Choose Your VIP Plan</h3>
-          
+
           <div className="space-y-4">
             {VIP_PLANS.map((plan) => (
-              <div 
+              <div
                 key={plan.id}
                 className={`relative bg-gradient-to-r ${plan.color} rounded-xl p-1 ${
                   plan.popular ? 'ring-2 ring-yellow-400' : ''
@@ -192,7 +182,7 @@ export default function VIPModal({ isOpen, onClose, userId }: VIPModalProps) {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="bg-black/80 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
@@ -239,8 +229,8 @@ export default function VIPModal({ isOpen, onClose, userId }: VIPModalProps) {
                     className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 text-white font-bold py-3`}
                     data-testid={`button-purchase-${plan.id}`}
                   >
-                    {purchaseVipMutation.isPending && selectedPlan === plan.id ? 
-                      "Processing..." : 
+                    {purchaseVipMutation.isPending && selectedPlan === plan.id ?
+                      "Processing..." :
                       `Purchase ${plan.title}`
                     }
                   </Button>

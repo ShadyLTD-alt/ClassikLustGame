@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ListChecks } from "lucide-react";
 
 interface Achievement {
   id: string;
@@ -162,9 +163,7 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white border-none max-w-md p-0 rounded-3xl overflow-hidden h-[700px] flex flex-col">
-        <DialogTitle className="sr-only">Achievements & Tasks</DialogTitle>
-        
-        {/* Header */}
+        {/* Header with DialogTitle and DialogDescription */}
         <div className="p-6 pb-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">🏆 Progress</h2>
@@ -201,7 +200,7 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
             <div className="px-6 mb-4">
               <div className="bg-black/30 rounded-xl p-4">
                 <h3 className="text-lg font-bold mb-3">Your Progress</h3>
-                
+
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-yellow-400">{completedCount}</div>
@@ -261,62 +260,108 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
             <div className="flex-1 overflow-y-auto px-6 pb-6">
               <div className="space-y-3">
                 {filteredAchievements.map((achievement) => (
-                  <div 
-                    key={achievement.id}
-                    className={`bg-black/20 rounded-xl p-4 border-2 ${
-                      achievement.status === "claimable" ? 'border-yellow-400/50' :
-                      achievement.status === "completed" ? 'border-green-400/50' :
-                      achievement.status === "in_progress" ? 'border-blue-400/50' :
-                      'border-gray-500/30'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-lg">🎯</span>
-                          <h3 className="font-bold text-white">{achievement.title}</h3>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            achievement.status === "in_progress" ? 'bg-purple-600/50' :
-                            achievement.status === "completed" ? 'bg-green-600/50' :
-                            'bg-gray-600/50'
-                          }`}>
-                            {achievement.status === "in_progress" ? "progression" : achievement.status}
-                          </span>
-                        </div>
-                        
-                        <p className="text-sm text-white/80 mb-2">{achievement.description}</p>
-                        
-                        {/* Progress Bar */}
-                        <div className="space-y-1 mb-2">
-                          <div className="flex justify-between text-xs text-white/70">
-                            <span>Progress</span>
-                            <span>{formatNumber(achievement.progress)}/{formatNumber(achievement.maxProgress)}</span>
-                          </div>
-                          <Progress 
-                            value={(achievement.progress / achievement.maxProgress) * 100} 
-                            className="h-2 bg-gray-700"
-                          />
-                        </div>
+                  <Dialog key={achievement.id}>
+                    <DialogTrigger asChild>
+                      <div 
+                        className={`bg-black/20 rounded-xl p-4 border-2 cursor-pointer ${
+                          achievement.status === "claimable" ? 'border-yellow-400/50' :
+                          achievement.status === "completed" ? 'border-green-400/50' :
+                          achievement.status === "in_progress" ? 'border-blue-400/50' :
+                          'border-gray-500/30'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="text-lg">🎯</span>
+                              <h3 className="font-bold text-white">{achievement.title}</h3>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                achievement.status === "in_progress" ? 'bg-purple-600/50' :
+                                achievement.status === "completed" ? 'bg-green-600/50' :
+                                'bg-gray-600/50'
+                              }`}>
+                                {achievement.status === "in_progress" ? "progression" : achievement.status}
+                              </span>
+                            </div>
 
-                        {/* Reward */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 text-sm">
-                            <span>🎁</span>
-                            <span className="text-yellow-400 font-medium">{achievement.reward}</span>
+                            <p className="text-sm text-white/80 mb-2">{achievement.description}</p>
+
+                            {/* Progress Bar */}
+                            <div className="space-y-1 mb-2">
+                              <div className="flex justify-between text-xs text-white/70">
+                                <span>Progress</span>
+                                <span>{formatNumber(achievement.progress)}/{formatNumber(achievement.maxProgress)}</span>
+                              </div>
+                              <Progress 
+                                value={(achievement.progress / achievement.maxProgress) * 100} 
+                                className="h-2 bg-gray-700"
+                              />
+                            </div>
+
+                            {/* Reward */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2 text-sm">
+                                <span>🎁</span>
+                                <span className="text-yellow-400 font-medium">{achievement.reward}</span>
+                              </div>
+
+                              {achievement.status === "claimable" && (
+                                <Button
+                                  size="sm"
+                                  className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold"
+                                >
+                                  Claim
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          
-                          {achievement.status === "claimable" && (
-                            <Button
-                              size="sm"
-                              className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold"
-                            >
-                              Claim
-                            </Button>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </DialogTrigger>
+                    <DialogContent className="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white border-none max-w-md p-0 rounded-3xl overflow-hidden h-[700px] flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-white flex items-center">
+                          <ListChecks className="w-6 h-6 text-blue-400 mr-2" />
+                          Tasks & Achievements
+                        </DialogTitle>
+                        <DialogDescription className="text-white/70">
+                          Complete tasks and unlock achievements to earn rewards.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="p-6 flex-1 overflow-y-auto">
+                        <div className="bg-black/20 rounded-xl p-4 border-2 border-yellow-400/50 mb-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-lg">🎯</span>
+                                <h3 className="font-bold text-white">{achievement.title}</h3>
+                                <span className="text-xs px-2 py-1 rounded-full bg-purple-600/50">
+                                  progression
+                                </span>
+                              </div>
+                              <p className="text-sm text-white/80 mb-2">{achievement.description}</p>
+                              <div className="space-y-1 mb-2">
+                                <div className="flex justify-between text-xs text-white/70">
+                                  <span>Progress</span>
+                                  <span>{formatNumber(achievement.progress)}/{formatNumber(achievement.maxProgress)}</span>
+                                </div>
+                                <Progress value={(achievement.progress / achievement.maxProgress) * 100} className="h-2 bg-gray-700" />
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2 text-sm">
+                                  <span>🎁</span>
+                                  <span className="text-yellow-400 font-medium">{achievement.reward}</span>
+                                </div>
+                                <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold">
+                                  Claim
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 ))}
               </div>
             </div>
@@ -339,13 +384,13 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                           {task.difficulty}
                         </span>
                       </div>
-                      
+
                       <p className="text-sm text-white/80 mb-2">{task.description}</p>
-                      
+
                       {task.timeLimit && (
                         <p className="text-xs text-orange-400 mb-2">⏰ {task.timeLimit}</p>
                       )}
-                      
+
                       {/* Progress */}
                       <div className="space-y-1 mb-2">
                         <div className="flex justify-between text-xs text-white/70">
@@ -364,7 +409,7 @@ export default function AchievementsModal({ isOpen, onClose, userId }: Achieveme
                           <span>🎁</span>
                           <span className="text-green-400 font-medium">{task.reward}</span>
                         </div>
-                        
+
                         {task.progress >= task.maxProgress && (
                           <Button
                             size="sm"

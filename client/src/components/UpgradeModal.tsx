@@ -1,9 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Upgrade, User } from "@shared/schema";
+import { Star } from "lucide-react";
+
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -51,8 +53,10 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gradient-to-br from-purple-700 via-pink-600 to-red-600 text-white border-none max-w-sm p-0 rounded-3xl overflow-hidden h-[600px] flex flex-col">
-        <DialogTitle className="sr-only">Upgrades</DialogTitle>
         
+          <DialogTitle className="sr-only">Upgrades</DialogTitle>
+          <DialogDescription className="sr-only">A list of available upgrades to purchase.</DialogDescription>
+
         {/* Header */}
         <div className="p-6 pb-0">
           <div className="flex items-center justify-between mb-4">
@@ -69,7 +73,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
               ✕
             </Button>
           </div>
-          
+
           {/* User Points */}
           <div className="bg-black/30 rounded-xl p-3 mb-4">
             <div className="text-center">
@@ -95,23 +99,23 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
                       <span className="text-lg">⭐</span>
                       <h3 className="font-bold text-white">{upgrade.name}</h3>
                     </div>
-                    
+
                     <p className="text-sm text-white/80 mb-2">{upgrade.description}</p>
-                    
+
                     {/* Stats */}
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-white/70">Level:</span>
                         <span className="text-green-400 font-bold">Lv.{upgrade.level}</span>
                       </div>
-                      
+
                       {upgrade.hourlyBonus > 0 && (
                         <div className="flex justify-between">
                           <span className="text-white/70">Sugar per Hour:</span>
                           <span className="text-pink-400 font-bold">+{formatNumber(upgrade.hourlyBonus)}</span>
                         </div>
                       )}
-                      
+
                       {upgrade.tapBonus > 0 && (
                         <div className="flex justify-between">
                           <span className="text-white/70">Tap Bonus:</span>
@@ -130,7 +134,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
                       {formatNumber(upgrade.cost)}
                     </span>
                   </div>
-                  
+
                   <Button
                     onClick={() => upgradeMutation.mutate(upgrade.id)}
                     disabled={!canAfford(upgrade.cost) || upgradeMutation.isPending}
@@ -144,7 +148,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
                     {upgrade.level >= upgrade.maxLevel ? 'MAX' : canAfford(upgrade.cost) ? 'BUY' : 'LOCKED'}
                   </Button>
                 </div>
-                
+
                 {/* Progress Bar */}
                 {upgrade.maxLevel > 1 && (
                   <div className="mt-3">
@@ -162,7 +166,7 @@ export default function UpgradeModal({ isOpen, onClose, upgrades, user }: Upgrad
                 )}
               </div>
             ))}
-            
+
             {upgrades.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-4xl mb-2">⬆️</div>
