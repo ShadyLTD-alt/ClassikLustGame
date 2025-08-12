@@ -27,7 +27,7 @@ class MistralService {
   constructor() {
     this.config = {
       apiKey: process.env.MISTRAL_API_KEY || '',
-      model: 'mistral-medium',
+      model: 'mistral-small-latest',
       debugModel: 'codestral-latest'
     };
   }
@@ -123,7 +123,8 @@ Respond in character with a natural, engaging message. Keep it conversational an
     });
 
     if (!response.ok) {
-      throw new Error(`Mistral API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Mistral API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json() as any;
